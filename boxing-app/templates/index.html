@@ -228,45 +228,9 @@
                 </div>
 
                 <div class="photo-controls">
-                    <div class="photo-switcher">
-                        <button type="button"
-                                class="photo-arrow prev"
-                                aria-label="Vorheriges Foto">‹</button>
-
-                        <span class="photo-counter">
-                            {{ selected + 1 if gallery.photos else 0 }}
-                            / {{ gallery.photos | length }}
-                        </span>
-
-                        <button type="button"
-                                class="photo-arrow next"
-                                aria-label="Nächstes Foto">›</button>
-                    </div>
-
-                    <button type="button"
-                            class="save-photo"
-                            {% if not gallery.photos %}disabled{% endif %}>
-                        Foto speichern
-                    </button>
-
-                    <span class="photo-status" role="status">
-                        {% if not gallery.photos %}
-                            Kein passendes Foto gefunden
-                        {% else %}
-                            Foto auswählen
-                        {% endif %}
-                    </span>
-
-                    <a class="photo-credit"
-                       {% if photo %}
-                       href="{{ photo.source }}"
-                       {% else %}
-                       hidden
-                       {% endif %}
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        Bildquelle / Lizenz ↗
-                    </a>
+                    <span class="photo-status" role="status">Verifiziertes Foto wird geprüft …</span>
+                    <a class="photo-credit" {% if photo %}href="{{ photo.source }}"{% else %}hidden{% endif %}
+                      target="_blank" rel="noopener noreferrer">Fotoquelle und Lizenz ↗</a>
                 </div>
             </div>
             {% endfor %}
@@ -422,85 +386,33 @@
 </footer>
 
 <script>
-document.querySelectorAll(".arena-fighter").forEach((card) => {
-    const photos = JSON.parse(card.dataset.photos || "[]");
-    let index = Number(card.dataset.index || 0);
-
-    const photoLayer = card.querySelector(".arena-photo");
-    const counter = card.querySelector(".photo-counter");
-    const source = card.querySelector(".photo-credit");
-    const status = card.querySelector(".photo-status");
-    const saveButton = card.querySelector(".save-photo");
-
-    function displayPhoto() {
-        if (!photos.length) {
-            photoLayer.style.backgroundImage = "none";
-            counter.textContent = "0 / 0";
-            source.hidden = true;
-            saveButton.disabled = true;
-            return;
-        }
-
-        const photo = photos[index];
-        photoLayer.style.backgroundImage =
-            'url("' + photo.url.replaceAll('"', "%22") + '")';
-
-        counter.textContent = `${index + 1} / ${photos.length}`;
-        source.href = photo.source;
-        source.hidden = false;
-        saveButton.disabled = false;
-    }
-
-    function changePhoto(direction) {
-        if (!photos.length) return;
-
-        index = (index + direction + photos.length) % photos.length;
-        displayPhoto();
-        status.textContent = "Nicht gespeichert";
-        status.classList.remove("saved");
-    }
-
-    card.querySelector(".prev").addEventListener("click", () => {
-        changePhoto(-1);
-    });
-
-    card.querySelector(".next").addEventListener("click", () => {
-        changePhoto(1);
-    });
-
-    saveButton.addEventListener("click", async () => {
-        if (!photos.length) return;
-
-        saveButton.disabled = true;
-        status.textContent = "Speichere ...";
-
-        try {
-            const response = await fetch(
-                "{{ url_for('select_photo') }}",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        name: card.dataset.name,
-                        index: index
-                    })
-                }
-            );
-
-            if (!response.ok) throw new Error("Speichern fehlgeschlagen");
-
-            status.textContent = "✓ Foto gespeichert";
-            status.classList.add("saved");
-        } catch (error) {
-            status.textContent = "Fehler beim Speichern";
-        } finally {
-            saveButton.disabled = false;
-        }
-    });
-
-    displayPhoto();
+document.querySelectorAll(".arena-fighter").forEach(card => {
+  const name=card.dataset.name;
+  const layer=card.querySelector(".arena-photo");
+  const credit=card.querySelector(".photo-credit");
+  const status=card.querySelector(".photo-status");
+  const original=JSON.parse(card.dataset.photos||"[]");
+  let current=original.length ? original[0] : null;
+  function show(photo){
+    if(!photo||!photo.url){status.textContent="Kein eindeutig zugeordnetes Foto verfügbar";return;}
+    layer.style.backgroundImage='url("'+photo.url.replaceAll('"',"%22")+'")';
+    if(photo.source){credit.href=photo.source;credit.hidden=false;}
+    status.textContent="Foto über Wikidata eindeutig zugeordnet";
+  }
+  if(current)show(current);
+  async function load(tries=0){
+    try{
+      const url=new URL({{ url_for('verified_comparison_photo')|tojson }},window.location.origin);
+      url.searchParams.set("name",name);
+      const response=await fetch(url);
+      if(!response.ok)throw Error();
+      const photo=await response.json();
+      if(photo.url){show(photo);return;}
+      if(photo.pending&&tries<5){setTimeout(()=>load(tries+1),2000);return;}
+      show(null);
+    }catch(_){status.textContent="Foto aktuell nicht verfügbar";}
+  }
+  load();
 });
 </script>
 
