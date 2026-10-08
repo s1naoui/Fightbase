@@ -2,7 +2,7 @@
 {% block title %}Fightbase | Boxkämpfe & Ergebnisse{% endblock %}
 {% block main %}
 <section class="hero"><div class="eyebrow">FIGHTBASE · BOXING HUB</div>
-<h1>ALLE KÄMPFE.<br><em>ALLE FAKTEN.</em></h1><p>Echte historische Kämpfe und Boxerprofile aus dem offenen Boxarchiv. Kommende Termine nur, wenn eine freie Quelle sie bestätigt.</p>
+<h1>ALLE KÄMPFE.<br><em>ALLE FAKTEN.</em></h1><p>Echte historische Kämpfe und separat überprüfte Kampfankündigungen. Der Plan ist ein datierter Datenstand, kein vollständiger Live-Feed.</p>
 <a class="cta" href="{{ url_for('hub.dashboard',tab='results') }}">BOXARCHIV ENTDECKEN →</a><a class="cta secondary" href="{{ url_for('hub.dashboard',tab='fighters') }}">BOXER ANSEHEN</a>
 <div class="hero-vs" aria-hidden="true">VS</div></section>
 <div class="metrics"><div><strong>{{ upcoming|length }}</strong>Kämpfe in der Auswahl</div><div><strong>{{ archive_count }}</strong>Historische Kämpfe</div><div><strong>{{ fighters_count }}</strong>Erfasste Boxer</div><div><strong>{{ events|length }}</strong>Events</div></div>

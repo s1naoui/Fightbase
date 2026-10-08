@@ -15,3 +15,10 @@ footer{text-align:center;padding:30px 12px;border-top:1px solid #263852;color:#8
 @media(max-width:1000px){.top-inner{flex-wrap:wrap}.topbar nav{order:3;flex:1 1 100%;justify-content:center}.fighter-grid{grid-template-columns:repeat(2,1fr)}.fight-row{grid-template-columns:105px 1fr 110px 15px;gap:9px}}
 @media(max-width:670px){.hero{padding:35px 22px}.hero-vs{display:none}.metrics{grid-template-columns:repeat(2,1fr)}.content-panel{padding:17px}.fighter-grid,.event-grid,.rank-grid,.detail-grid{grid-template-columns:1fr}.fight-row{grid-template-columns:85px 1fr 20px}.matchup{gap:6px;font-size:19px;flex-direction:column}.matchup span{font-size:12px}.fight-row .details{display:none}.duel{grid-template-columns:1fr}.duel-side{min-height:365px}.duel-vs{top:50%;font-size:65px}.side-blue .duel-name{text-align:left}.profile-hero{grid-template-columns:1fr}.profile-photo{min-height:310px}.topbar nav{gap:12px}.topbar nav a{font-size:11px}.brand{font-size:26px}.compare-link{font-size:10px}.profile-fights a{flex-direction:column}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+/* Three-result probabilities: A / Draw / B */
+.probabilities.three-way>div{min-width:0}
+.probabilities.three-way strong{font-size:clamp(28px,3vw,55px)}
+.three-prob-bar{display:flex;width:100%;height:21px;border:1px solid #526986;border-radius:12px;overflow:hidden;background:#1e2e43}
+.three-prob-bar .bar-a{background:linear-gradient(90deg,#a91332,#ff6072)}
+.three-prob-bar .bar-draw{background:#c4cfdd}
+.three-prob-bar .bar-b{background:linear-gradient(90deg,#2469c9,#64b3ff)}
