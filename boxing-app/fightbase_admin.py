@@ -6,6 +6,7 @@ local development. Configure a password and stable Flask secret in .env.
 from __future__ import annotations
 import hmac
 import io
+import json
 import os
 import re
 import secrets
@@ -54,7 +55,7 @@ def init_admin(app):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=45),
-        MAX_CONTENT_LENGTH=6*1024*1024,
+        MAX_CONTENT_LENGTH=70*1024*1024,  # 64 MB ZIP + multipart overhead
     )
     ensure_tables()
     app.register_blueprint(bp)
@@ -71,6 +72,9 @@ def ensure_tables():
             fighter_id TEXT PRIMARY KEY,
             wins INTEGER, losses INTEGER, draws INTEGER, ko_wins INTEGER,
             source_url TEXT NOT NULL, updated_at TEXT NOT NULL)""")
+        db.execute("""CREATE TABLE IF NOT EXISTS hub_photo_imports(
+            id TEXT PRIMARY KEY, created_at TEXT NOT NULL,
+            report_json TEXT NOT NULL)""")
 def apply_manual_records():
     """Reapply user's sourced corrections after seeded stat refresh."""
     with feed.connect() as db:
@@ -389,3 +393,41 @@ def remove_fight(fight_id):
         db.execute("DELETE FROM hub_events WHERE id=?",(row["event_id"],))
     flash("Manuell eingetragener Kampf entfernt.","success")
     return redirect(url_for("admin.dashboard")+"#fight-editor")
+
+
+# ZIP files never get extracted to user-supplied paths. Filename matching is
+# conservative and returns a reviewable report after import.
+@bp.post("/admin/fotos/zip-import")
+def zip_import():
+    _require_admin_post()
+    upload=request.files.get("archive")
+    if not upload or not upload.filename.lower().endswith(".zip"):
+        flash("Bitte eine ZIP-Datei mit JPG-, PNG- oder WebP-Bildern auswählen.","error")
+        return redirect(url_for("admin.dashboard")+"#zip-fotos")
+    from photo_bulk import ImportValidationError, import_archive
+    try:
+        report=import_archive(upload.stream,
+                              overwrite=request.form.get("overwrite")=="1")
+    except ImportValidationError as exc:
+        flash(str(exc),"error")
+        return redirect(url_for("admin.dashboard")+"#zip-fotos")
+    report_id=uuid.uuid4().hex
+    with feed.connect() as db:
+        db.execute("""INSERT INTO hub_photo_imports(id,created_at,report_json)
+          VALUES(?,?,?)""",(report_id,feed.utcnow(),
+                             json.dumps(report,ensure_ascii=False)))
+    return redirect(url_for("admin.zip_report",report_id=report_id))
+
+
+@bp.get("/admin/fotos/zip-bericht/<report_id>")
+def zip_report(report_id):
+    if not signed_in():
+        return redirect(url_for("admin.login"))
+    if not re.fullmatch(r"[0-9a-f]{32}",report_id):
+        abort(404)
+    row=feed.one("SELECT * FROM hub_photo_imports WHERE id=?",(report_id,))
+    if row is None:
+        abort(404)
+    report=json.loads(row["report_json"])
+    return render_template("admin_zip_report.html",status=feed.status(),
+       page="admin",report=report,created_at=row["created_at"],token=csrf())

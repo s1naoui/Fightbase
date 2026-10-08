@@ -12,6 +12,30 @@
  <strong><icon name="shield-check" inline/> Deine Daten bleiben auf deinem PC.</strong>
  <p>Hochgeladene Fotos werden lokal unter <code>boxing-app/uploads/fighter_photos</code> gespeichert und sind absichtlich nicht Teil von GitHub. Bitte lade nur Fotos hoch, die du rechtmäßig verwenden darfst. Das Bild ersetzt für das ausgewählte Boxerprofil die automatische Bildsuche.</p>
 </div>
+<section class="admin-panel admin-bulk-panel" id="zip-fotos">
+ <div class="eyebrow">PHOTO MANAGEMENT · MASSENIMPORT</div>
+ <h2>ALLE BOXERFOTOS AUF EINMAL</h2>
+ <p>Lege alle Boxerfotos in einen Ordner und erstelle daraus eine <strong>ZIP-Datei</strong>. Fightbase erkennt die Boxer anhand des Dateinamens und fügt eindeutige Treffer automatisch ein.</p>
+ <div class="admin-zip-names">
+  <span>Tyson Fury.jpg</span>
+  <span>Oleksandr Usyk.png</span>
+  <span>Anthony Joshua.webp</span>
+ </div>
+ <p class="hint">Bei mehreren Profilen mit gleichem Namen benutze <strong>Name__profil-id.jpg</strong>, zum Beispiel <code>Tyson Fury__reviewed-tyson-fury.jpg</code>. Die Profil-ID steht auf jeder Boxerkarte im Admin-Bereich. Unklare Treffer werden nicht übernommen.</p>
+ <form class="admin-form" method="post" action="{{ url_for('admin.zip_import') }}" enctype="multipart/form-data">
+   <input type="hidden" name="csrf_token" value="{{ token }}">
+   <label>ZIP-Datei mit deinen Fotos auswählen
+      <input type="file" name="archive" accept=".zip,application/zip" required>
+   </label>
+   <label class="admin-zip-checkbox">
+     <input type="checkbox" name="overwrite" value="1">
+     Bereits selbst hochgeladene Bilder ersetzen
+   </label>
+   <button type="submit" class="admin-primary">ZIP IMPORTIEREN UND AUTOMATISCH ZUORDNEN →</button>
+ </form>
+ <p class="hint">Bis 250 Dateien pro ZIP, maximal 64 MB ZIP-Größe, maximal 5 MB und 16 Megapixel pro Bild. Akzeptiert: JPG, PNG und WebP. Nach dem Hochladen bekommst du einen Bericht, welche Fotos erfolgreich zugeordnet wurden und welche nicht.</p>
+ <p class="hint"><strong>Wichtig:</strong> Fightbase prüft den Dateinamen, nicht automatisch das Gesicht auf dem Foto. Verwende die richtigen Bilder und nur solche mit entsprechenden Nutzungsrechten.</p>
+</section>
 <section class="admin-panel admin-fight-editor" id="fight-editor">
  <div class="eyebrow">FIGHT CALENDAR</div><h2>Neuen Kampf eintragen</h2>
  <p>Fehlt ein bestätigter Kampf in den kostenlosen APIs? Du kannst ihn mit beiden Namen, Veranstaltungsort, Datum und Quelle selbst ergänzen. Unbestätigte Ringwalk-Zeiten bitte leer lassen.</p>
