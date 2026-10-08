@@ -53,7 +53,8 @@ class DataQualityTests(unittest.TestCase):
             result["probability_a"]+result["probability_draw"]+result["probability_b"],
             100.0)
         self.assertIn(b"Unentschieden",self.client.get(
-            "/kampf/"+feed.upcoming()[0]["id"]).data)
+            "/kampf/"+next(b["id"] for b in feed.upcoming()
+                            if b["a_name"]=="Daniel Dubois")).data)
 
     def test_photo_rejects_mismatched_or_ambiguous_entity(self):
         sample={"P106":[{"mainsnak":{"datavalue":{"value":{"id":"Q11338576"}}}}],

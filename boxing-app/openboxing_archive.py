@@ -125,13 +125,22 @@ def refresh_remote_archive():
         if not isinstance(a, dict) or not isinstance(b, dict):
             continue
         def name(boxer):
-            return " ".join(_text((boxer.get("name") or {}).get(part))
-                            for part in ("first","last")).strip()
-        result = item.get("result") or {}
-        weight = item.get("weight") or {}
+            raw = boxer.get("name")
+            if isinstance(raw, dict):
+                return " ".join(_text(raw.get(part)) for part in ("first","last")).strip()
+            if isinstance(raw, str):
+                return raw.strip()
+            return _text(boxer.get("fullName"))
+        result = item.get("result")
+        result = result if isinstance(result,dict) else {}
+        weight = item.get("weight")
+        weight = weight if isinstance(weight,dict) else {}
+        a_name, b_name = name(a), name(b)
+        if not a_name or not b_name:
+            continue
         normalized.append([
             item.get("boutId"), item.get("date"),
-            a.get("championId"), name(a), b.get("championId"), name(b),
+            a.get("championId"), a_name, b.get("championId"), b_name,
             result.get("winner"), result.get("methodOfVictory"),
             result.get("totalRounds"), item.get("scheduledRounds"), weight.get("class")
         ])
