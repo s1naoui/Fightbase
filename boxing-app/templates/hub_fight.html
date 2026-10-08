@@ -6,13 +6,16 @@
 {% if fight.id.startswith('ob-') %}
 <p class="hint">Historischer Kampf aus Open Boxing. Ergebnisse beziehen sich ausschließlich auf dieses Duell, nicht auf eine vollständige Karrierebilanz. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Datenquelle ↗</a></p>
 {% endif %}
+{% if reference %}
+<p class="hint">Geprüft am {{ reference.reviewed_on }}. <a href="{{ reference.source_url }}" target="_blank" rel="noopener noreferrer">Kampfquelle ↗</a>. {{ reference.time_note or '' }}. Änderungen des Kampfplans möglich.</p>
+{% endif %}
 <div class="duel">
 {% for side in ['a','b'] %}
 {% set name=fight.a_name if side=='a' else fight.b_name %}
 {% set fid=fight.a_id if side=='a' else fight.b_id %}
 {% set person=a if side=='a' else b %}
 <section class="duel-side {{ 'side-red' if side=='a' else 'side-blue' }}">
-<div class="duel-photo" data-fighter-photo="{{ fid }}" data-fighter-name="{{ name }}"><span>🥊</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
+<div class="duel-photo" data-fighter-photo="{{ fid }}" data-fighter-name="{{ name }}"><span class="missing-photo">Kein verifiziertes Foto</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
 <div class="duel-name"><small>{{ 'RED CORNER' if side=='a' else 'BLUE CORNER' }}</small><h2>{{ name or 'Noch offen' }}</h2><p>{{ (person.wins ~ '–' ~ person.losses ~ '–' ~ (person.draws or 0)) if person and person.wins is not none and person.losses is not none else 'Bilanz offen' }}</p>
 {% if fid %}<a href="{{ url_for('hub.fighter',fighter_id=fid) }}">BOXERPROFIL →</a>{% endif %}</div>
 </section>
@@ -20,11 +23,22 @@
 <div class="duel-vs">VS</div></div>
 <div class="detail-grid">
 <section class="info-panel"><div class="eyebrow">FIGHT CARD</div><h2>Kampfinformationen</h2>
-<dl><dt>Datum</dt><dd>{{ fight.fight_date|fightdate }}</dd><dt>Event</dt><dd>{{ fight.event_title or '–' }}</dd><dt>Veranstaltungsort</dt><dd>{{ fight.venue or '–' }}</dd><dt>Ort</dt><dd>{{ fight.location or '–' }}</dd><dt>Gewichtsklasse</dt><dd>{{ fight.division or '–' }}</dd><dt>Runden</dt><dd>{{ fight.rounds if fight.rounds is not none else '–' }}</dd><dt>Ergebnis</dt><dd>{{ fight.outcome or 'Noch kein Ergebnis' }}{% if fight.result_round %} · Runde {{ fight.result_round }}{% endif %}</dd></dl></section>
+<dl><dt>Datum</dt><dd>{{ fight.fight_date|fightdate }}</dd>{% if fight.id.startswith('scheduled-') %}<dt>Beginn (Ortszeit)</dt><dd>{{ fight.fight_date[11:16] }} Uhr · nicht Ringwalk</dd>{% endif %}
+<dt>Event</dt><dd>{{ fight.event_title or '–' }}</dd><dt>Veranstaltungsort</dt><dd>{{ fight.venue or '–' }}</dd><dt>Ort</dt><dd>{{ fight.location or '–' }}</dd><dt>Gewichtsklasse</dt><dd>{{ fight.division or '–' }}</dd><dt>Runden</dt><dd>{{ fight.rounds if fight.rounds is not none else '–' }}</dd><dt>Ergebnis</dt><dd>{{ fight.outcome or 'Noch kein Ergebnis' }}{% if fight.result_round %} · Runde {{ fight.result_round }}{% endif %}</dd></dl></section>
 <section class="info-panel"><div class="eyebrow">FIGHTBASE PROGNOSE</div><h2>Wer gewinnt?</h2>
-{% if probability %}<div class="probabilities"><div><small>{{ a.name }}</small><strong class="red">{{ probability.probability_a }}%</strong></div><span>VS</span><div><small>{{ b.name }}</small><strong class="blue">{{ probability.probability_b }}%</strong></div></div>
-<p>Grobe Schätzung aus Alter und Bilanz – keine Wettquote und keine verlässliche Vorhersage.</p>
-<form method="post" action="{{ url_for('hub.analyse',fight_id=fight.id) }}"><button class="cta" type="submit">ANALYSE SPEICHERN →</button></form>
-{% else %}<p>Für eine Prognose fehlen aktuell Alter oder Kampfbilanz. Diese Angaben werden nach Möglichkeit beim Öffnen des Kampfs von der API ergänzt.</p>{% endif %}
+{% if probability %}
+<div class="probabilities three-way">
+  <div><small>{{ a.name }}</small><strong class="red">{{ probability.probability_a }}%</strong></div>
+  <div><small>Unentschieden</small><strong>{{ probability.probability_draw }}%</strong></div>
+  <div><small>{{ b.name }}</small><strong class="blue">{{ probability.probability_b }}%</strong></div>
+</div>
+<div class="three-prob-bar" role="img" aria-label="Sieg A {{ probability.probability_a }} Prozent, Unentschieden {{ probability.probability_draw }} Prozent, Sieg B {{ probability.probability_b }} Prozent">
+ <span class="bar-a" style="width:{{ probability.probability_a }}%"></span>
+ <span class="bar-draw" style="width:{{ probability.probability_draw }}%"></span>
+ <span class="bar-b" style="width:{{ probability.probability_b }}%"></span>
+</div>
+<p>{{ probability.method }}. Summe: 100 %. Keine Wettquoten.</p>
+<form method="post" action="{{ url_for('hub.analyse',fight_id=fight.id) }}"><button class="cta" type="submit">VERGLEICH SPEICHERN →</button></form>
+{% else %}<p>Eine Drei-Ausgänge-Prognose gibt es nur für kommende Duelle mit zwei verfügbaren Bilanzen. Historische Kämpfe werden nicht nachträglich prognostiziert.</p>{% endif %}
 </section></div>
 {% endblock %}

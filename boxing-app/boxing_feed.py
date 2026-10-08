@@ -66,6 +66,8 @@ def init_feed():
     # The bundled MIT-licensed historical data works even without internet.
     from openboxing_archive import load_bundled_archive
     load_bundled_archive()
+    from verified_fights import seed_verified
+    seed_verified()
 
 def meta(key, default=""):
     with connect() as c:
@@ -446,52 +448,27 @@ def rankings(page=1):
 
 
 def photo(fid,name):
-    """One cached picture per fighter; not guaranteed to be a recent ring photograph."""
-    if not fid or not name:
-        return {"url":None,"source":None}
-    # Respect photos previously selected in the old Fightbase comparison.
-    try:
-        norm=re.sub(r"\s+"," ",name.casefold()).strip()
-        saved=one("SELECT candidates,selected_index FROM photo_choices WHERE fighter_key=?",(norm,))
-        if saved:
-            photos=json.loads(saved["candidates"])
-            selected=photos[int(saved["selected_index"])]
-            if selected.get("url"):
-                return {"url":selected["url"],"source":selected.get("source")}
-    except (sqlite3.OperationalError,ValueError,TypeError,IndexError):
-        pass
-    cached=one("SELECT * FROM hub_images WHERE fighter_id=?",(fid,))
-    if cached:
-        try:
-            if datetime.now(timezone.utc)-datetime.fromisoformat(cached["checked_at"])<timedelta(days=14):
-                return {"url":cached["image_url"],"source":cached["source_url"]}
-        except ValueError:
-            pass
-    image_url=source_url=None
-    for title in (name,name+" (boxer)"):
-        try:
-            response=requests.get("https://en.wikipedia.org/api/rest_v1/page/summary/"+
-                 quote(title.replace(" ","_"),safe=""),timeout=7,
-                 headers={"User-Agent":"FightbaseEducational/1.0 (local student project)"})
-            if response.status_code!=200:
-                continue
-            info=response.json()
-            desc=(str(info.get("description") or "")+" "+str(info.get("extract") or "")).lower()
-            real_name=str(info.get("title") or "").casefold()
-            if name.casefold() not in real_name or not any(
-                word in desc for word in ("boxer","boxing","pugilist")
-            ):
-                continue
-            candidate=(info.get("thumbnail") or {}).get("source")
-            source=((info.get("content_urls") or {}).get("desktop") or {}).get("page")
-            if isinstance(candidate,str) and candidate.startswith("https://"):
-                image_url,source_url=candidate,source
-                break
-        except (requests.RequestException,ValueError):
-            pass
-    with connect() as c:
-        c.execute("""INSERT INTO hub_images VALUES (?,?,?,?)
-        ON CONFLICT(fighter_id) DO UPDATE SET
-        image_url=excluded.image_url,source_url=excluded.source_url,
-        checked_at=excluded.checked_at""",(fid,image_url,source_url,utcnow()))
-    return {"url":image_url,"source":source_url}
+    """One strictly identity-verified photo or a neutral placeholder."""
+    from identity_photos import verified_photo
+    return verified_photo(fid,name)
+
+
+# Direct sources are official organisation pages, not unverified current belts.
+ORGANIZATIONS = [
+  {"code":"WBA","name":"World Boxing Association","website":"https://www.wbaboxing.com/wba-ranking","description":"Weltmeistertitel nach Gewichtsklasse; verschiedene Titelvarianten möglich."},
+  {"code":"WBC","name":"World Boxing Council","website":"https://wbcboxing.com/en/","description":"Weltmeistertitel nach Gewichtsklasse und offizielle Ranglisten."},
+  {"code":"IBF","name":"International Boxing Federation","website":"https://www.ibf-usba-boxing.com/","description":"Weltmeistertitel und offizielle Ranglisten nach Gewichtsklasse."},
+  {"code":"WBO","name":"World Boxing Organization","website":"https://wboboxing.com/rankings/","description":"Weltmeistertitel, Ranglisten und Titelkämpfe nach Gewichtsklasse."}
+]
+
+def search_fights(term, kind="upcoming", limit=65):
+    term=(term or "").strip()[:80]
+    if not term:
+        return upcoming(limit) if kind == "upcoming" else results(limit)
+    now=date.today().isoformat()
+    clause="substr(fight_date,1,10)>=? AND status IN ('NOT_STARTED','LIVE')" if kind=="upcoming" else "status='FINISHED'"
+    return rows(f"""SELECT * FROM hub_fights WHERE {clause}
+        AND trim(COALESCE(a_name,''))!='' AND trim(COALESCE(b_name,''))!=''
+        AND (a_name LIKE ? OR b_name LIKE ? OR division LIKE ? OR event_title LIKE ?)
+        ORDER BY fight_date {'ASC' if kind=='upcoming' else 'DESC'} LIMIT ?""",
+        ((now,) if kind=="upcoming" else ()) + tuple("%"+term+"%" for _ in range(4)) + (limit,))

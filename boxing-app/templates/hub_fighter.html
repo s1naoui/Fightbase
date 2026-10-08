@@ -4,9 +4,12 @@
 {% if fighter.id.startswith('ob-') %}
 <p class="hint">Historisches Boxerprofil aus Open Boxing. Die Datenbank enthält nicht zwingend alle Kämpfe des Boxers; eine fehlende Bilanz bedeutet nicht 0 Siege. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Quelle ↗</a></p>
 {% endif %}
-<div class="profile-hero"><div class="profile-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span>🥊</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
+{% if reference %}
+<p class="hint">Bilanz nach öffentlich verfügbarer Quelle, überprüft am {{ reference.reviewed_on }}. <a href="{{ reference.source_url }}" target="_blank" rel="noopener noreferrer">Quellenprofil ↗</a>. Die Zahlen können sich durch spätere Kämpfe ändern.</p>
+{% endif %}
+<div class="profile-hero"><div class="profile-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span class="missing-photo">Kein verifiziertes Foto</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
 <div><div class="eyebrow">FIGHTER PROFILE</div><h1>{{ fighter.name }}</h1><p>{{ fighter.nickname or fighter.division or 'Professioneller Boxer' }}</p>
-<div class="stats"><div><b>{{ fighter.wins if fighter.wins is not none else '–' }}</b>Siege</div><div><b>{{ fighter.losses if fighter.losses is not none else '–' }}</b>Niederlagen</div><div><b>{{ fighter.draws if fighter.draws is not none else '–' }}</b>Unentschieden</div></div></div></div>
+<div class="stats"><div><b>{{ fighter.wins if fighter.wins is not none else '–' }}</b>Siege</div><div><b>{{ fighter.losses if fighter.losses is not none else '–' }}</b>Niederlagen</div><div><b>{{ fighter.draws if fighter.draws is not none else '–' }}</b>Unentschieden</div><div><b>{{ fighter.ko_wins if fighter.ko_wins is not none else "–" }}</b>K.o.-Siege</div></div></div></div>
 <div class="detail-grid">
 <section class="info-panel"><div class="eyebrow">PROFIL</div><h2>Statistiken</h2><dl>
 <dt>Alter laut API</dt><dd>{{ fighter.age if fighter.age is not none else '–' }}</dd>
@@ -15,7 +18,7 @@
 <dt>Auslage</dt><dd>{{ fighter.stance or '–' }}</dd>
 <dt>Körpergröße</dt><dd>{{ fighter.height or '–' }}</dd>
 <dt>K.o.-Siege</dt><dd>{{ fighter.ko_wins if fighter.ko_wins is not none else '–' }}</dd>
-</dl><p class="hint">Daten können zeitverzögert sein. Das einzelne Foto ist nicht garantiert eine aktuelle Aufnahme.</p></section>
+</dl><p class="hint">Bilanzen können zeitverzögert sein. Fotos werden nur bei eindeutiger Boxerzuordnung gezeigt; das Aufnahmejahr ist nicht garantiert.</p></section>
 <section class="info-panel"><div class="eyebrow">FIGHT HISTORY</div><h2>Kämpfe im Feed</h2>
 {% if matches %}<div class="profile-fights">{% for match in matches %}<a href="{{ url_for('hub.fight',fight_id=match.id) }}"><strong>{{ match.title or (match.a_name ~ ' vs ' ~ match.b_name) }}</strong><small>{{ match.fight_date|fightdate }} · {{ match.outcome or match.status }}</small></a>{% endfor %}</div>
 {% else %}<p>Für diesen Boxer sind im bisher synchronisierten Ausschnitt noch keine Kämpfe vorhanden.</p>{% endif %}

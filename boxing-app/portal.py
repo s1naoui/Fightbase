@@ -1,7 +1,7 @@
 """Routes for the Fightbase boxing news and results hub."""
 from datetime import datetime
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, abort
-from prediction import calculate_probability
+from prediction import calculate_probability, calculate_three_way
 import boxing_feed as feed
 
 bp=Blueprint("hub",__name__)
@@ -22,7 +22,7 @@ def dashboard():
     if tab is None:
         # Show populated historical results when free live schedules are empty.
         tab="upcoming" if feed.upcoming() else "results"
-    if tab not in ("upcoming","results","fighters","events","rankings"):
+    if tab not in ("upcoming","results","fighters","events","rankings","organizations"):
         tab="upcoming"
     search=request.args.get("q","").strip()[:80]
     event=request.args.get("event","").strip()[:80]
@@ -31,13 +31,16 @@ def dashboard():
         division=1
     if tab=="fighters" and len(search)>=3:
         feed.search_fighter(search)
-    upcoming=[f for f in feed.event_fights(event) if feed._has_two_boxers(f["a_name"],f["b_name"])] if event else feed.upcoming()
+    upcoming=[f for f in feed.event_fights(event) if feed._has_two_boxers(f["a_name"],f["b_name"])] if event else feed.search_fights(search,"upcoming") if tab=="upcoming" else feed.upcoming()
+    results=feed.search_fights(search,"results") if tab=="results" else feed.results()
+    organizations=[o for o in feed.ORGANIZATIONS if search.casefold() in
+       (o["code"]+" "+o["name"]).casefold()] if tab=="organizations" else feed.ORGANIZATIONS
     return render_template("hub_dashboard.html",page="dashboard",tab=tab,
-      status=feed.status(),upcoming=upcoming,results=feed.results(),
+      status=feed.status(),upcoming=upcoming,results=results,
       fighters=feed.fighters(search if tab=="fighters" else ""),events=feed.events(),
       ranking=feed.rankings(division) if tab=="rankings" else [],
       division=division,divisions=feed.DIVISIONS,search=search,event=event,
-      archive_count=feed.archive_count(),fighters_count=feed.fighters_count())
+      archive_count=feed.archive_count(),fighters_count=feed.fighters_count(),organizations=organizations)
 
 @bp.route("/kampf/<fight_id>")
 def fight(fight_id):
@@ -51,17 +54,18 @@ def fight(fight_id):
     a=feed.fighter_detail(row["a_id"]) if row["a_id"] else None
     b=feed.fighter_detail(row["b_id"]) if row["b_id"] else None
     probability=None
-    if a and b and all(
-        x[field] is not None for x in (a,b) for field in ("age","wins","losses")
+    if row["status"] in ("NOT_STARTED","LIVE") and a and b and all(
+        x[field] is not None for x in (a,b) for field in ("wins","losses")
     ):
         try:
-            probability=calculate_probability(
+            probability=calculate_three_way(
                 {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"]},
                 {"name":b["name"],"age":b["age"],"wins":b["wins"],"losses":b["losses"]})
         except (KeyError,ZeroDivisionError,TypeError,ValueError):
             pass
+    reference=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",(fight_id,))
     return render_template("hub_fight.html",page="fight",status=feed.status(),
-        fight=row,a=a,b=b,probability=probability)
+        fight=row,a=a,b=b,probability=probability,reference=reference)
 
 @bp.route("/kampf/<fight_id>/analysieren",methods=["POST"])
 def analyse(fight_id):
@@ -70,7 +74,7 @@ def analyse(fight_id):
         abort(404)
     a=feed.fighter_detail(row["a_id"]) if row["a_id"] else None
     b=feed.fighter_detail(row["b_id"]) if row["b_id"] else None
-    if not a or not b or any(x[key] is None for x in (a,b) for key in ("age","wins","losses")):
+    if row["status"] != "NOT_STARTED" or not a or not b or any(x[key] is None for x in (a,b) for key in ("wins","losses")):
         return redirect(url_for("hub.fight",fight_id=fight_id))
     result=calculate_probability(
         {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"]},
@@ -95,8 +99,9 @@ def fighter(fighter_id):
         abort(404)
     matches=feed.rows("""SELECT * FROM hub_fights WHERE a_id=? OR b_id=?
       ORDER BY fight_date DESC LIMIT 35""",(fighter_id,fighter_id))
+    reference=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",(fighter_id,))
     return render_template("hub_fighter.html",page="fighter",status=feed.status(),
-       fighter=person,matches=matches)
+       fighter=person,matches=matches,reference=reference)
 
 @bp.route("/api/foto/<fighter_id>")
 def photo(fighter_id):

@@ -64,15 +64,19 @@ class BoxingHubTests(unittest.TestCase):
         self.assertEqual(len(feed.rows("SELECT * FROM history")), 1)
         self.assertEqual(self.client.get(response.location).status_code, 200)
 
-    def test_only_one_cached_photo_is_returned(self):
-        feed.save_fighter({"id": "photo-id", "name": "Demo Boxer"})
+    def test_unverified_legacy_image_is_not_displayed(self):
+        """An old cached image is not proof that it depicts this boxer."""
+        feed.save_fighter({"id":"photo-id","name":"Demo Boxer"})
         with feed.connect() as db:
             db.execute("INSERT INTO hub_images VALUES (?,?,?,?)", (
-                "photo-id", "https://example.org/photo.jpg",
-                "https://example.org/source", feed.utcnow()))
-        response = self.client.get("/api/foto/photo-id")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json["url"], "https://example.org/photo.jpg")
+                "photo-id","https://example.org/photo.jpg",
+                "https://example.org/source",feed.utcnow()))
+        from unittest.mock import patch
+        with patch("identity_photos.fetch",side_effect=ValueError("network unavailable")):
+            response=self.client.get("/api/foto/photo-id")
+        self.assertEqual(response.status_code,200)
+        self.assertIsNone(response.json["url"])
+
 
 
 if __name__ == "__main__":
