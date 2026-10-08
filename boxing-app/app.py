@@ -168,13 +168,13 @@ def photo_score(title, name, width, height):
 
 def search_photos(name):
     """Use only portraits of a uniquely identified Wikidata boxer."""
-    from identity_photos import verified_photo
+    from identity_photos import quick_verified_photo
     from boxing_feed import one
     canonical=canonical_name(name)
     row=one("SELECT id FROM hub_fighters WHERE lower(name)=lower(?) ORDER BY id LIMIT 1",
             (canonical,))
     key=row["id"] if row else "legacy-"+get_key(canonical)
-    verified=verified_photo(key,canonical)
+    verified=quick_verified_photo(key,canonical)
     if not verified.get("url"):
         return []
     return [{"url":verified["url"],"source":verified["source"],"title":canonical,
@@ -198,6 +198,17 @@ def get_selected_photo(gallery):
         return photos[index]
 
     return photos[0]
+
+
+@app.route("/vergleich/verifiziertes-foto")
+def verified_comparison_photo():
+    from identity_photos import quick_verified_photo
+    name = request.args.get("name", "").strip()
+    if not 1 <= len(name) <= 120:
+        return jsonify({"error":"Ungültiger Boxername"}),400
+    canonical=canonical_name(name)
+    key="legacy-"+get_key(canonical)
+    return jsonify(quick_verified_photo(key,canonical))
 
 
 @app.route("/vergleich", methods=["GET", "POST"])

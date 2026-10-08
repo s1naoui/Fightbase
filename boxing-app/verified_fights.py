@@ -86,6 +86,7 @@ def seed_verified():
                 VALUES (?,?,?,?) ON CONFLICT(id) DO NOTHING""",
                     (fighter_key(boxer_name),boxer_name,division,AS_OF))
             fid="scheduled-"+start[:10]+"-"+fighter_key(a)+"-"+fighter_key(b)
+            event_id="event-"+fid
             db.execute("""INSERT INTO hub_fights
               (id,fight_date,title,status,a_id,b_id,a_name,b_name,
                division,event_id,event_title,venue,location,updated_at)
@@ -95,10 +96,17 @@ def seed_verified():
                a_id=excluded.a_id,b_id=excluded.b_id,
                a_name=excluded.a_name,b_name=excluded.b_name,
                division=excluded.division,venue=excluded.venue,
-               location=excluded.location,event_title=excluded.event_title""",
+               location=excluded.location,event_title=excluded.event_title,
+               event_id=excluded.event_id""",
               (fid,start,a+" vs "+b,fighter_key(a),fighter_key(b),a,b,division,
                "scheduled-"+start[:10],belt+" title fight" if belt else "Boxevent",
                venue,city,AS_OF))
+            db.execute("""INSERT INTO hub_events(id,title,event_date,venue,location,updated_at)
+                VALUES (?,?,?,?,?,?)
+                ON CONFLICT(id) DO UPDATE SET title=excluded.title,
+                event_date=excluded.event_date,venue=excluded.venue,
+                location=excluded.location,updated_at=excluded.updated_at""",
+                (event_id,a+" vs "+b,start[:10],venue,city,AS_OF))
             db.execute("""INSERT INTO hub_sources
                (entity_id,source_url,reviewed_on,source_kind,time_note)
                VALUES(?,?,?,'reviewed-schedule',?)
