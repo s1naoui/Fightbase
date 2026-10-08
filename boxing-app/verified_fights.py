@@ -16,30 +16,30 @@ RECORDS = [
 ]
 # Time is the start of the event in local time, NOT fighter ring walk.
 SCHEDULE = [
- ("2026-10-08T18:00:00-04:00","Osleys Iglesias","Oliver Zaren",
+ ("2026-10-08","Osleys Iglesias","Oliver Zaren",
   "Capitole de Québec","Québec City, Canada","Super Middleweight","IBF",
   "https://fightnights.com/upcoming-boxing-schedule"),
- ("2026-10-17T16:00:00-07:00","Sebastian Fundora","Ermal Hadribeaj",
+ ("2026-10-17T14:00:00-07:00","Sebastian Fundora","Ermal Hadribeaj",
   "The Cosmopolitan","Las Vegas, USA","Super Welterweight","WBC",
-  "https://fightnights.com/upcoming-boxing-schedule"),
- ("2026-10-24T18:00:00+01:00","Dalton Smith","Alberto Puello",
+  "https://cosmopolitanlasvegas.mgmresorts.com/en/entertainment/pbc-boxing.html"),
+ ("2026-10-24T16:00:00+01:00","Dalton Smith","Alberto Puello",
   "Utilita Arena","Sheffield, United Kingdom","Super Lightweight","WBC",
-  "https://fightnights.com/upcoming-boxing-schedule"),
- ("2026-10-24T19:00:00-05:00","Emanuel Navarrete","O'Shaquie Foster",
+  "https://www.ticketmaster.co.uk/matchroom-boxing-uk-tickets/artist/5363334"),
+ ("2026-10-24","Emanuel Navarrete","O'Shaquie Foster",
   "Frost Bank Center","San Antonio, USA","Super Featherweight","",
   "https://fightnights.com/upcoming-boxing-schedule"),
- ("2026-11-08T18:00:00-06:00","Elif Nur Turhan","Alycia Baumgardner",
+ ("2026-11-08","Elif Nur Turhan","Alycia Baumgardner",
   "College Park Center","Arlington, USA","Lightweight","IBF",
   "https://fightnights.com/upcoming-boxing-schedule"),
- ("2026-10-10T19:00:00-04:00","Floyd Schofield","Lucas Bahdi",
+ ("2026-10-10T15:15:00-05:00","Floyd Schofield","Lucas Bahdi",
   "Wintrust Arena","Chicago, USA","Lightweight","WBA",
-  "https://fightnights.com/Floyd-Schofield-vs-Lucas-Bahdi-WBA-Lightweight-Title-Fight-3880"),
- ("2026-10-17T19:00:00+01:00","Daniel Dubois","Fabio Wardley",
+  "https://www.wintrustarena.com/events/detail/golden-boy"),
+ ("2026-10-17","Daniel Dubois","Fabio Wardley",
   "The O2","London, United Kingdom","Heavyweight","WBO",
   "https://www.fightnights.com/Daniel-Dubois-vs-Fabio-Wardley-II-WBO-World-Heavyweight-Title-3883"),
- ("2026-12-11T19:00:00+00:00","Tyson Fury","Anthony Joshua",
+ ("2026-12-11T17:00:00+00:00","Tyson Fury","Anthony Joshua",
   "Principality Stadium","Cardiff, United Kingdom","Heavyweight","",
-  "https://www.fightnights.com/Tyson-Fury-vs-Anthony-Joshua-3890"),
+  "https://www.principalitystadium.wales/event/tyson-fury-v-anthony-joshua/"),
 ]
 
 
@@ -105,4 +105,6 @@ def seed_verified():
                ON CONFLICT(entity_id) DO UPDATE SET
                 source_url=excluded.source_url,reviewed_on=excluded.reviewed_on,
                 time_note=excluded.time_note""",
-               (fid,url,AS_OF,"Beginn der Veranstaltung, nicht Ringwalk"))
+               (fid,url,AS_OF,
+                "Veranstaltungsbeginn / erster Kampf (nicht Ringwalk)" if "T" in start
+                else "Uhrzeit bisher nicht zuverlässig bestätigt"))
