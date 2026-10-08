@@ -12,6 +12,38 @@
  <strong><icon name="shield-check" inline/> Deine Daten bleiben auf deinem PC.</strong>
  <p>Hochgeladene Fotos werden lokal unter <code>boxing-app/uploads/fighter_photos</code> gespeichert und sind absichtlich nicht Teil von GitHub. Bitte lade nur Fotos hoch, die du rechtmäßig verwenden darfst. Das Bild ersetzt für das ausgewählte Boxerprofil die automatische Bildsuche.</p>
 </div>
+<section class="admin-panel admin-fight-editor" id="fight-editor">
+ <div class="eyebrow">FIGHT CALENDAR</div><h2>Neuen Kampf eintragen</h2>
+ <p>Fehlt ein bestätigter Kampf in den kostenlosen APIs? Du kannst ihn mit beiden Namen, Veranstaltungsort, Datum und Quelle selbst ergänzen. Unbestätigte Ringwalk-Zeiten bitte leer lassen.</p>
+ <form method="post" action="{{ url_for('admin.create_fight') }}" class="admin-form">
+  <input type="hidden" name="csrf_token" value="{{ token }}">
+  <div class="admin-stats">
+    <label>Boxer A<input name="boxer_a" required maxlength="120" placeholder="z. B. Tyson Fury"></label>
+    <label>Boxer B<input name="boxer_b" required maxlength="120" placeholder="z. B. Anthony Joshua"></label>
+    <label>Datum<input name="date" type="date" required></label>
+    <label>Beginn in Ortszeit (optional)<input name="time" type="time"></label>
+  </div>
+  <label>Veranstaltung (optional)<input name="event" maxlength="160" placeholder="Fight Night"></label>
+  <div class="admin-stats">
+    <label>Veranstaltungsort<input name="venue" required maxlength="160" placeholder="Arena"></label>
+    <label>Stadt, Land<input name="location" required maxlength="160" placeholder="Wien, Österreich"></label>
+  </div>
+  <label>Gewichtsklasse<input name="division" required maxlength="80" placeholder="Heavyweight"></label>
+  <label>Offizielle Meldung / Quelle<input type="url" name="source_url" required placeholder="https://..."></label>
+  <button type="submit" class="admin-primary">KAMPF MIT QUELLE EINTRAGEN</button>
+ </form>
+ {% if manual_fights %}
+ <h3>Deine eigenen Kampfankündigungen</h3>
+ <div class="admin-manual-fights">
+ {% for bout in manual_fights %}
+ <div><span>{{ bout.fight_date|fightdate }} · {{ bout.a_name }} vs {{ bout.b_name }}</span>
+ <form method="post" action="{{ url_for('admin.remove_fight',fight_id=bout.id) }}" onsubmit="return confirm('Diesen Kampf löschen?')">
+  <input type="hidden" name="csrf_token" value="{{ token }}"><button class="admin-danger" type="submit">Entfernen</button>
+ </form></div>
+ {% endfor %}
+ </div>
+ {% endif %}
+</section>
 <form class="search admin-search" action="{{ url_for('admin.dashboard') }}" method="get">
  <input type="search" name="q" value="{{ q }}" placeholder="Boxer suchen, z. B. Usyk, Fury oder Dubois" aria-label="Boxer suchen" minlength="2">
  <button type="submit">BOXER FINDEN →</button>

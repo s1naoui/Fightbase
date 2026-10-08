@@ -29,8 +29,10 @@ LOGIN_ERRORS={}
 
 def configured():
     load_dotenv(BASE/".env")
-    return bool(os.getenv("FIGHTBASE_ADMIN_PASSWORD","").strip() and
-                os.getenv("FIGHTBASE_SECRET_KEY","").strip())
+    password=os.getenv("FIGHTBASE_ADMIN_PASSWORD","").strip()
+    secret=os.getenv("FIGHTBASE_SECRET_KEY","").strip()
+    return len(password)>=10 and len(secret)>=32 and not (
+        "DEIN_" in password.upper() or "HIER_" in secret.upper())
 
 def signed_in():
     return configured() and session.get("fightbase_admin") is True
@@ -65,6 +67,7 @@ def init_admin(app):
             wins INTEGER, losses INTEGER, draws INTEGER, ko_wins INTEGER,
             source_url TEXT NOT NULL, updated_at TEXT NOT NULL)""")
     app.register_blueprint(bp)
+    apply_manual_records()
 
 def apply_manual_records():
     """Reapply user's sourced corrections after seeded stat refresh."""
@@ -108,7 +111,7 @@ def _fighter_or_404(fighter_id):
 @bp.route("/admin/login",methods=["GET","POST"])
 def login():
     if not configured():
-        return render_template("admin_login.html",ready=False,token=None)
+        return render_template("admin_login.html",ready=False,token=None,status=feed.status(),page="admin")
     if signed_in():
         return redirect(url_for("admin.dashboard"))
     message=None
@@ -131,7 +134,7 @@ def login():
                 return redirect(url_for("admin.dashboard"))
             LOGIN_ERRORS[ip]=(attempts+1,time.monotonic())
             message="Passwort nicht korrekt."
-    return render_template("admin_login.html",ready=True,message=message,token=csrf())
+    return render_template("admin_login.html",ready=True,message=message,token=csrf(),status=feed.status(),page="admin")
 
 @bp.post("/admin/logout")
 def logout():
@@ -151,8 +154,11 @@ def dashboard():
         fighters=feed.fighters()[:30]
     photo_rows={r["fighter_id"]:r for r in feed.rows("SELECT * FROM hub_admin_photos")}
     record_rows={r["fighter_id"]:r for r in feed.rows("SELECT * FROM hub_admin_records")}
+    mine=feed.rows("""SELECT * FROM hub_fights WHERE id LIKE 'manual-%'
+        ORDER BY fight_date DESC LIMIT 30""")
     return render_template("admin_dashboard.html",status=feed.status(),page="admin",
-        fighters=fighters,q=q,photos=photo_rows,records=record_rows,token=csrf())
+        fighters=fighters,q=q,photos=photo_rows,records=record_rows,token=csrf(),
+        manual_fights=mine)
 
 @bp.get("/media/boxer/<fighter_id>")
 def photo(fighter_id):
@@ -284,3 +290,86 @@ def reset_record(fighter_id):
     # An existing seeded record will be restored on the next app restart.
     flash("Manuelle Bilanz-Änderung zurückgesetzt. Nach Neustart gelten wieder die Quelldaten.","success")
     return _back(fighter_id)
+
+
+@bp.post("/admin/kampf")
+def create_fight():
+    """Manually enter sourced upcoming boxing fights absent from free APIs."""
+    _require_admin_post()
+    from datetime import date, datetime
+    a=request.form.get("boxer_a","").strip()[:120]
+    b=request.form.get("boxer_b","").strip()[:120]
+    day=request.form.get("date","").strip()
+    local_time=request.form.get("time","").strip()
+    venue=request.form.get("venue","").strip()[:160]
+    location=request.form.get("location","").strip()[:160]
+    division=request.form.get("division","").strip()[:80]
+    source=request.form.get("source_url","").strip()[:500]
+    event=request.form.get("event","").strip()[:160]
+    try:
+        if not a or not b or a.casefold()==b.casefold():
+            raise ValueError("Bitte zwei unterschiedliche Boxernamen eintragen.")
+        if date.fromisoformat(day)<date.today():
+            raise ValueError("Der Kampftermin muss heute oder in der Zukunft liegen.")
+        if local_time:
+            datetime.strptime(local_time,"%H:%M")
+        if not venue or not location:
+            raise ValueError("Veranstaltungsort und Stadt/Land sind erforderlich.")
+        if not division:
+            raise ValueError("Bitte Gewichtsklasse eintragen.")
+        parsed=urlsplit(source)
+        if parsed.scheme not in ("http","https") or not parsed.netloc:
+            raise ValueError("Eine überprüfbare http(s)-Quellenadresse ist Pflicht.")
+    except ValueError as exc:
+        flash("Kampf nicht eingetragen: "+str(exc),"error")
+        return redirect(url_for("admin.dashboard")+"#fight-editor")
+    fight_id="manual-"+uuid.uuid4().hex
+    event_id="event-"+fight_id
+    start=day+("T"+local_time+":00" if local_time else "")
+    with feed.connect() as db:
+        identifiers=[]
+        for boxer in (a,b):
+            record=db.execute("""SELECT id FROM hub_fighters
+                WHERE name=? COLLATE NOCASE
+                ORDER BY CASE WHEN id LIKE 'reviewed-%' THEN 0 ELSE 1 END,id LIMIT 1""",
+                (boxer,)).fetchone()
+            if record:
+                identifiers.append(record["id"])
+            else:
+                fid="manual-fighter-"+uuid.uuid4().hex
+                db.execute("""INSERT INTO hub_fighters (id,name,division,updated_at)
+                     VALUES(?,?,?,?)""",(fid,boxer,division,feed.utcnow()))
+                identifiers.append(fid)
+        db.execute("""INSERT INTO hub_events
+            (id,title,event_date,venue,location,updated_at)
+            VALUES(?,?,?,?,?,?)""",(event_id,event or a+" vs "+b,
+                                    day,venue,location,feed.utcnow()))
+        db.execute("""INSERT INTO hub_fights
+            (id,fight_date,title,status,a_id,b_id,a_name,b_name,division,
+             event_id,event_title,venue,location,updated_at)
+             VALUES(?,?,?,'NOT_STARTED',?,?,?,?,?,?,?,?,?,?)""",
+             (fight_id,start,a+" vs "+b,identifiers[0],identifiers[1],
+              a,b,division,event_id,event or a+" vs "+b,venue,location,feed.utcnow()))
+        db.execute("""INSERT INTO hub_sources
+            (entity_id,source_url,reviewed_on,source_kind,time_note)
+            VALUES(?,?,?,?,?)""",(fight_id,source,date.today().isoformat(),
+                "admin-verified-schedule",
+                "Veranstaltungsbeginn Ortszeit, nicht Ringwalk" if local_time
+                else "Uhrzeit nicht bestätigt"))
+    flash("Kampf eingetragen. Er erscheint im Kampfkalender.","success")
+    return redirect(url_for("admin.dashboard")+"#fight-editor")
+
+@bp.post("/admin/kampf/<fight_id>/loeschen")
+def remove_fight(fight_id):
+    _require_admin_post()
+    if not re.fullmatch(r"manual-[a-f0-9]{32}",fight_id):
+        abort(404)
+    with feed.connect() as db:
+        row=db.execute("SELECT event_id FROM hub_fights WHERE id=?",(fight_id,)).fetchone()
+        if not row:
+            abort(404)
+        db.execute("DELETE FROM hub_fights WHERE id=?",(fight_id,))
+        db.execute("DELETE FROM hub_sources WHERE entity_id=?",(fight_id,))
+        db.execute("DELETE FROM hub_events WHERE id=?",(row["event_id"],))
+    flash("Manuell eingetragener Kampf entfernt.","success")
+    return redirect(url_for("admin.dashboard")+"#fight-editor")

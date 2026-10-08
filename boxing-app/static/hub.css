@@ -276,3 +276,12 @@ footer { font-size: 14px; line-height: 1.65; }
  .admin-intro-header{align-items:start;flex-direction:column}
  .admin-panel{padding:22px}
 }
+
+.admin-fight-editor{max-width:none;margin:18px 0 30px}
+.admin-fight-editor h2{font-size:42px}
+.admin-fight-editor .admin-form{max-width:780px}
+.admin-fight-editor input{min-height:42px}
+.admin-manual-fights>div{display:flex;align-items:center;justify-content:space-between;
+gap:12px;border-bottom:1px solid #465571;padding:9px 0;font-size:14px}
+.admin-manual-fights form{margin:0}
+.admin-manual-fights .admin-danger{margin:0}
