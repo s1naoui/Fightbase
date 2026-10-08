@@ -18,7 +18,10 @@ def fightdate(value):
 @bp.route("/")
 def dashboard():
     feed.trigger_sync()
-    tab=request.args.get("tab","upcoming")
+    tab=request.args.get("tab")
+    if tab is None:
+        # Show populated historical results when free live schedules are empty.
+        tab="upcoming" if feed.upcoming() else "results"
     if tab not in ("upcoming","results","fighters","events","rankings"):
         tab="upcoming"
     search=request.args.get("q","").strip()[:80]
@@ -33,7 +36,8 @@ def dashboard():
       status=feed.status(),upcoming=upcoming,results=feed.results(),
       fighters=feed.fighters(search if tab=="fighters" else ""),events=feed.events(),
       ranking=feed.rankings(division) if tab=="rankings" else [],
-      division=division,divisions=feed.DIVISIONS,search=search,event=event)
+      division=division,divisions=feed.DIVISIONS,search=search,event=event,
+      archive_count=feed.archive_count(),fighters_count=feed.fighters_count())
 
 @bp.route("/kampf/<fight_id>")
 def fight(fight_id):

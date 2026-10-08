@@ -3,6 +3,9 @@
 <a class="back" href="{{ url_for('hub.dashboard') }}">← ZURÜCK ZUM KAMPFPLAN</a>
 <div class="eyebrow">{{ fight.fight_date|fightdate }} · {{ fight.division or 'Boxen' }} · {{ {'FINISHED':'BEENDET','LIVE':'LIVE','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</div>
 <h1 class="page-title">{{ fight.title or 'KAMPFDETAILS' }}</h1>
+{% if fight.id.startswith('ob-') %}
+<p class="hint">Historischer Kampf aus Open Boxing. Ergebnisse beziehen sich ausschließlich auf dieses Duell, nicht auf eine vollständige Karrierebilanz. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Datenquelle ↗</a></p>
+{% endif %}
 <div class="duel">
 {% for side in ['a','b'] %}
 {% set name=fight.a_name if side=='a' else fight.b_name %}

@@ -2,14 +2,17 @@
 {% block title %}Fightbase | Boxkämpfe & Ergebnisse{% endblock %}
 {% block main %}
 <section class="hero"><div class="eyebrow">FIGHTBASE · BOXING HUB</div>
-<h1>ALLE KÄMPFE.<br><em>ALLE FAKTEN.</em></h1><p>Kampfplan, Ergebnisse und Boxerprofile aus einer kostenlosen Datenquelle. Die Boxsport-Abdeckung kann unvollständig sein.</p>
-<a class="cta" href="{{ url_for('hub.dashboard',tab='upcoming') }}">KÄMPFE ENTDECKEN →</a><a class="cta secondary" href="{{ url_for('hub.dashboard',tab='fighters') }}">BOXER ANSEHEN</a>
+<h1>ALLE KÄMPFE.<br><em>ALLE FAKTEN.</em></h1><p>Echte historische Kämpfe und Boxerprofile aus dem offenen Boxarchiv. Kommende Termine nur, wenn eine freie Quelle sie bestätigt.</p>
+<a class="cta" href="{{ url_for('hub.dashboard',tab='results') }}">BOXARCHIV ENTDECKEN →</a><a class="cta secondary" href="{{ url_for('hub.dashboard',tab='fighters') }}">BOXER ANSEHEN</a>
 <div class="hero-vs" aria-hidden="true">VS</div></section>
-<div class="metrics"><div><strong>{{ upcoming|length }}</strong>Kämpfe in der Auswahl</div><div><strong>{{ results|length }}</strong>Letzte Ergebnisse</div><div><strong>{{ fighters|length }}</strong>Boxer in der Auswahl</div><div><strong>{{ events|length }}</strong>Events</div></div>
+<div class="metrics"><div><strong>{{ upcoming|length }}</strong>Kämpfe in der Auswahl</div><div><strong>{{ archive_count }}</strong>Historische Kämpfe</div><div><strong>{{ fighters_count }}</strong>Erfasste Boxer</div><div><strong>{{ events|length }}</strong>Events</div></div>
 <section class="content-panel">
-<div class="section-top"><div><div class="eyebrow">FIGHT CENTER</div><h2>{{ {'upcoming':'KOMMENDE KÄMPFE','results':'ERGEBNISSE','fighters':'BOXER-VERZEICHNIS','events':'VERANSTALTUNGEN','rankings':'WELTRANGLISTEN'}[tab] }}</h2></div>
+<div class="section-top"><div><div class="eyebrow">FIGHT CENTER</div><h2>{{ {'upcoming':'KOMMENDE KÄMPFE','results':'HISTORISCHE ERGEBNISSE','fighters':'BOXER-VERZEICHNIS','events':'VERANSTALTUNGEN','rankings':'WELTRANGLISTEN'}[tab] }}</h2></div>
 <div class="feed-status">{{ '⏳ Synchronisiere ...' if status.syncing else ('● Automatisch synchronisiert' if status.last_success else '○ Daten werden erwartet') }}</div></div>
-<div class="tabs"><a class="{{ 'active' if tab=='upcoming' else '' }}" href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kommende Kämpfe</a><a class="{{ 'active' if tab=='results' else '' }}" href="{{ url_for('hub.dashboard',tab='results') }}">Ergebnisse</a><a class="{{ 'active' if tab=='fighters' else '' }}" href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a class="{{ 'active' if tab=='events' else '' }}" href="{{ url_for('hub.dashboard',tab='events') }}">Events</a><a class="{{ 'active' if tab=='rankings' else '' }}" href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a></div>
+<div class="tabs"><a class="{{ 'active' if tab=='upcoming' else '' }}" href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kommende Kämpfe</a><a class="{{ 'active' if tab=='results' else '' }}" href="{{ url_for('hub.dashboard',tab='results') }}">Historische Ergebnisse</a><a class="{{ 'active' if tab=='fighters' else '' }}" href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a class="{{ 'active' if tab=='events' else '' }}" href="{{ url_for('hub.dashboard',tab='events') }}">Events</a><a class="{{ 'active' if tab=='rankings' else '' }}" href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a></div>
+{% if tab=='results' %}
+<p class="hint">Archivdaten von Open Boxing (vorwiegend historische Titelkämpfe, zuletzt bis 2023). Keine Live-Ergebnisse und keine vollständigen Karrierebilanzen. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Quelle ansehen ↗</a></p>
+{% endif %}
 {% if tab in ('upcoming','results') %}
 {% set fights=upcoming if tab=='upcoming' else results %}
 {% if event %}<a class="back" href="{{ url_for('hub.dashboard',tab='events') }}">← Alle Veranstaltungen</a>{% endif %}
@@ -18,10 +21,10 @@
 <div class="date"><strong>{{ fight.fight_date|fightdate }}</strong><small>{{ fight.division or 'Gewicht offen' }}</small></div>
 <div class="matchup"><b class="red">{{ fight.a_name or 'Noch offen' }}</b><span>VS</span><b class="blue">{{ fight.b_name or 'Noch offen' }}</b></div>
 <div class="details"><b class="{{ 'live' if fight.status=='LIVE' else 'pill' }}">{{ {'LIVE':'LIVE','FINISHED':'ERGEBNIS','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</b><small>{{ (fight.outcome ~ (' · Runde ' ~ fight.result_round if fight.result_round else '')) if fight.outcome else (fight.venue or fight.location or '') }}</small></div><span class="arrow">→</span></a>
-{% endfor %}</div>{% else %}<div class="empty"><h3>Keine bestätigten Boxerduelle verfügbar</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'Im kostenlosen Feed sind derzeit keine Boxkämpfe mit zwei bekannten Teilnehmern vorhanden. Events ohne bestätigte Gegner werden nicht als Kämpfe angezeigt.' }}</p></div>{% endif %}
+{% endfor %}</div>{% else %}<div class="empty"><h3>Keine bestätigten Boxerduelle verfügbar</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'Im freien Live-Feed sind derzeit keine bestätigten zukünftigen Duelle. <a href="/?tab=results">Historische Boxkämpfe im Archiv ansehen →</a>' }}</p></div>{% endif %}
 {% elif tab=='fighters' %}
 <form class="search" action="{{ url_for('hub.dashboard') }}"><input type="hidden" name="tab" value="fighters"><input type="search" name="q" maxlength="80" placeholder="Boxer suchen, z. B. Usyk oder Fury" value="{{ search }}"><button type="submit">SUCHEN →</button></form>
-<p class="hint">Bei einer Suche mit mindestens drei Zeichen wird das Verzeichnis bei Bedarf durch API-Daten ergänzt.</p>
+<p class="hint">Historisches Boxer-Verzeichnis aus Open Boxing. Geburtsdatum und vollständige Karrierebilanz sind nicht für alle Boxer vorhanden.</p>
 {% if fighters %}<div class="fighter-grid">{% for fighter in fighters %}
 <a class="fighter-card" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}"><div class="fighter-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span>🥊</span></div>
 <div class="fighter-info"><small>{{ fighter.division or 'BOXING' }}</small><h3>{{ fighter.name }}</h3><p>{{ (fighter.wins ~ '–' ~ fighter.losses ~ '–' ~ (fighter.draws or 0)) if fighter.wins is not none and fighter.losses is not none else 'Bilanz noch nicht verfügbar' }}</p><b>PROFIL ANSEHEN →</b></div></a>

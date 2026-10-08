@@ -10,9 +10,10 @@
 {% if not status.configured %}
 <div class="notice">Kostenloser Datenfeed vorübergehend nicht verfügbar.</div>
 {% elif status.error %}<div class="notice">API-Problem: {{ status.error }}. Bereits synchronisierte Einträge bleiben sichtbar.</div>{% endif %}
+<p class="free-note">Echtes Boxarchiv mit historischen Kämpfen. Veraltete Kampfplan-Daten werden nicht als kommende Veranstaltungen dargestellt. <a href="https://github.com/edhwright/open-boxing" target="_blank" rel="noopener noreferrer">Open Boxing · MIT ↗</a></p>
 <p class="free-note">{{ status.note or "Kostenlose Datenquellen sind möglicherweise unvollständig." }}</p>{% block main %}{% endblock %}
 </main>
-<footer><strong>FIGHT<span>BASE</span></strong><p>Quelle: TheSportsDB (kostenlos) · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
+<footer><strong>FIGHT<span>BASE</span></strong><p>Quellen: Open Boxing (historisch, MIT) + TheSportsDB (kostenlos) · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
 <script>
 document.querySelectorAll("[data-fighter-photo]").forEach(function(box){
  const id=box.dataset.fighterPhoto; if(!id)return;

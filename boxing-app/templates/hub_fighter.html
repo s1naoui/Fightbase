@@ -1,6 +1,9 @@
 {% extends "hub_base.html" %}{% block title %}{{ fighter.name }} | Fightbase{% endblock %}
 {% block main %}
 <a class="back" href="{{ url_for('hub.dashboard',tab='fighters') }}">← ZURÜCK ZU DEN BOXERN</a>
+{% if fighter.id.startswith('ob-') %}
+<p class="hint">Historisches Boxerprofil aus Open Boxing. Die Datenbank enthält nicht zwingend alle Kämpfe des Boxers; eine fehlende Bilanz bedeutet nicht 0 Siege. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Quelle ↗</a></p>
+{% endif %}
 <div class="profile-hero"><div class="profile-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span>🥊</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
 <div><div class="eyebrow">FIGHTER PROFILE</div><h1>{{ fighter.name }}</h1><p>{{ fighter.nickname or fighter.division or 'Professioneller Boxer' }}</p>
 <div class="stats"><div><b>{{ fighter.wins if fighter.wins is not none else '–' }}</b>Siege</div><div><b>{{ fighter.losses if fighter.losses is not none else '–' }}</b>Niederlagen</div><div><b>{{ fighter.draws if fighter.draws is not none else '–' }}</b>Unentschieden</div></div></div></div>
