@@ -63,6 +63,9 @@ def init_feed():
             page INTEGER PRIMARY KEY, content TEXT NOT NULL, checked_at TEXT)""")
         c.execute("CREATE INDEX IF NOT EXISTS hub_date ON hub_fights(fight_date)")
         c.execute("CREATE INDEX IF NOT EXISTS hub_name ON hub_fighters(name)")
+    # The bundled MIT-licensed historical data works even without internet.
+    from openboxing_archive import load_bundled_archive
+    load_bundled_archive()
 
 def meta(key, default=""):
     with connect() as c:
@@ -282,6 +285,12 @@ def sync():
                     scanned+=1
         except (requests.RequestException,ValueError,TypeError) as exc:
             errors.append(day+": "+str(exc)[:90])
+    # Optional weekly openboxing.org refresh; on failure bundled data stays.
+    try:
+        from openboxing_archive import refresh_remote_archive
+        refresh_remote_archive()
+    except (requests.RequestException, ValueError, TypeError, OSError) as exc:
+        errors.append("Open Boxing: "+str(exc)[:100])
     if len(errors)<10:
         set_meta("last_success",utcnow())
     set_meta("error"," | ".join(errors[:2]) if errors else "")
@@ -347,13 +356,21 @@ def upcoming(limit=65):
        ORDER BY fight_date ASC LIMIT ?""",(date.today().isoformat(),limit))
 
 def results(limit=60):
-    since=(date.today()-timedelta(days=365)).isoformat()
+    """Latest known confirmed fight outcomes, including explicitly historical records."""
     return rows("""SELECT * FROM hub_fights WHERE status='FINISHED'
-       AND substr(fight_date,1,10)>=?
        AND trim(COALESCE(a_name,'')) != '' AND trim(COALESCE(b_name,'')) != ''
        AND lower(trim(a_name)) NOT IN ('tba','tbd','unknown','noch offen')
        AND lower(trim(b_name)) NOT IN ('tba','tbd','unknown','noch offen')
-       ORDER BY fight_date DESC LIMIT ?""",(since,limit))
+       ORDER BY fight_date DESC LIMIT ?""",(limit,))
+
+def archive_count():
+    row=one("SELECT count(*) AS count FROM hub_fights WHERE id LIKE 'ob-%' AND status='FINISHED'")
+    return row["count"] if row else 0
+
+def fighters_count():
+    row=one("SELECT count(*) AS count FROM hub_fighters")
+    return row["count"] if row else 0
+
 
 def events():
     return rows("""SELECT * FROM hub_events
