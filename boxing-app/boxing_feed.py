@@ -68,6 +68,9 @@ def init_feed():
     load_bundled_archive()
     from verified_fights import seed_verified
     seed_verified()
+    from fightbase_admin import ensure_tables, apply_manual_records
+    ensure_tables()
+    apply_manual_records()
 
 def meta(key, default=""):
     with connect() as c:
@@ -308,6 +311,9 @@ def _worker():
         LOCK.release()
 
 def trigger_sync(force=False):
+    # Background HTTP sync is not deterministic in isolated GitHub CI tests.
+    if os.environ.get("CI","").lower()=="true":
+        return False
     global RUNNING
     key, minutes, _=settings()
     if not key:

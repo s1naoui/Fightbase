@@ -59,8 +59,10 @@ def fight(fight_id):
     ):
         try:
             probability=calculate_three_way(
-                {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"]},
-                {"name":b["name"],"age":b["age"],"wins":b["wins"],"losses":b["losses"]})
+                {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"],
+                 "draws":a["draws"],"ko_wins":a["ko_wins"]},
+                {"name":b["name"],"age":b["age"],"wins":b["wins"],"losses":b["losses"],
+                 "draws":b["draws"],"ko_wins":b["ko_wins"]})
         except (KeyError,ZeroDivisionError,TypeError,ValueError):
             pass
     reference=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",(fight_id,))
@@ -100,8 +102,11 @@ def fighter(fighter_id):
     matches=feed.rows("""SELECT * FROM hub_fights WHERE a_id=? OR b_id=?
       ORDER BY fight_date DESC LIMIT 35""",(fighter_id,fighter_id))
     reference=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",(fighter_id,))
+    from fightbase_admin import get_manual_record
+    manual_record=get_manual_record(fighter_id)
     return render_template("hub_fighter.html",page="fighter",status=feed.status(),
-       fighter=person,matches=matches,reference=reference)
+       fighter=person,matches=matches,reference=reference,
+       manual_record=manual_record)
 
 @bp.route("/api/foto/<fighter_id>")
 def photo(fighter_id):
@@ -111,6 +116,10 @@ def photo(fighter_id):
     if not person:
         abort(404)
     from identity_photos import quick_verified_photo
+    from fightbase_admin import get_photo
+    uploaded=get_photo(fighter_id)
+    if uploaded:
+        return jsonify(uploaded)
     return jsonify(quick_verified_photo(fighter_id,person["name"]))
 
 @bp.route("/api/status")

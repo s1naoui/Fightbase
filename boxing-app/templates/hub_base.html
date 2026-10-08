@@ -4,8 +4,8 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='hub.css') }}"></head>
 <body>
 <header class="topbar"><div class="top-inner"><a class="brand" href="{{ url_for('hub.dashboard') }}">🥊 FIGHT<span>BASE</span><small>BOXING INTELLIGENCE</small></a>
-<nav><a href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kämpfe</a><a href="{{ url_for('hub.dashboard',tab='results') }}">Ergebnisse</a><a href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a><a href="{{ url_for('hub.dashboard',tab='organizations') }}">Organisationen</a><a href="{{ url_for('hub.dashboard',tab='events') }}">Events</a></nav>
-<a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a></div></header>
+<nav><a href="{{ url_for('hub.dashboard',tab='upcoming') }}" {% if tab is defined and tab=='upcoming' %}aria-current="page"{% endif %}>Kämpfe</a><a href="{{ url_for('hub.dashboard',tab='results') }}" {% if tab is defined and tab=='results' %}aria-current="page"{% endif %}>Ergebnisse</a><a href="{{ url_for('hub.dashboard',tab='fighters') }}" {% if tab is defined and tab=='fighters' %}aria-current="page"{% endif %}>Boxer</a><a href="{{ url_for('hub.dashboard',tab='rankings') }}" {% if tab is defined and tab=='rankings' %}aria-current="page"{% endif %}>Ranglisten</a><a href="{{ url_for('hub.dashboard',tab='organizations') }}" {% if tab is defined and tab=='organizations' %}aria-current="page"{% endif %}>Organisationen</a><a href="{{ url_for('hub.dashboard',tab='events') }}" {% if tab is defined and tab=='events' %}aria-current="page"{% endif %}>Events</a></nav>
+<a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a><a class="compare-link admin-nav-link" href="{{ url_for('admin.dashboard') }}">⚙ Admin</a></div></header>
 <main class="container">
 {% if not status.configured %}
 <div class="notice">Kostenloser Datenfeed nicht erreichbar. Das historische Archiv ist weiterhin verfügbar.</div>
@@ -26,8 +26,10 @@ document.querySelectorAll("[data-fighter-photo]").forEach(function(box){
     if(old<5){box.dataset.retries=String(old+1);setTimeout(load,2000);}
     return;
   }
-  if(!data.url||!data.url.startsWith("https://"))return;
-  const img=document.createElement("img");img.alt=box.dataset.fighterName||"Boxer";img.loading="lazy";img.src=data.url;
+  if(!data.url)return;
+  const imageUrl=new URL(data.url,location.origin);
+  if(imageUrl.protocol!=="https:"&&imageUrl.origin!==location.origin)return;
+  const img=document.createElement("img");img.alt=box.dataset.fighterName||"Boxer";img.loading="lazy";img.src=imageUrl.href;
   img.onerror=function(){img.remove()};img.onload=function(){const placeholder=box.querySelector(".missing-photo");if(placeholder)placeholder.hidden=true;};box.prepend(img);
   const source=box.querySelector("[data-source]");if(source&&data.source){source.href=data.source;source.hidden=false;}
  }catch(_){}};

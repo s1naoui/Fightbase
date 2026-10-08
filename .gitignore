@@ -7,3 +7,6 @@ __pycache__/
 *.sqlite3
 .venv/
 venv/
+
+# Admin-managed local images (never store in Git)
+boxing-app/uploads/

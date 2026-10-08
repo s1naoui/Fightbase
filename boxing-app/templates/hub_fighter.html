@@ -4,7 +4,10 @@
 {% if fighter.id.startswith('ob-') %}
 <p class="hint">Historisches Boxerprofil aus Open Boxing. Die Datenbank enthält nicht zwingend alle Kämpfe des Boxers; eine fehlende Bilanz bedeutet nicht 0 Siege. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Quelle ↗</a></p>
 {% endif %}
-{% if reference %}
+{% if manual_record %}
+<p class="hint">Diese Bilanz wurde im Admin-Bereich mit Quelle gepflegt ({{ manual_record.updated_at[:10] }}).
+<a href="{{ manual_record.source_url }}" target="_blank" rel="noopener noreferrer">Bilanz-Quelle ↗</a></p>
+{% elif reference %}
 <p class="hint">Bilanz nach öffentlich verfügbarer Quelle, überprüft am {{ reference.reviewed_on }}. <a href="{{ reference.source_url }}" target="_blank" rel="noopener noreferrer">Quellenprofil ↗</a>. Die Zahlen können sich durch spätere Kämpfe ändern.</p>
 {% endif %}
 <div class="profile-hero"><div class="profile-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span class="missing-photo">Kein verifiziertes Foto</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>

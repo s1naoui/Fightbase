@@ -1,0 +1,28 @@
+{% extends "hub_base.html" %}
+{% block title %}Admin-Anmeldung | Fightbase{% endblock %}
+{% block main %}
+<div class="admin-wrap">
+ <div class="eyebrow">FIGHTBASE CONTROL CENTER</div>
+ <h1 class="admin-title">ADMIN <em>LOGIN</em></h1>
+ <p class="admin-intro">Geschützter Bereich für deine eigenen Boxerfotos und überprüfte Kampfbilanzen.</p>
+ {% if not ready %}
+ <section class="admin-panel">
+  <h2>Einmalige Einrichtung</h2>
+  <p>Der Admin-Bereich ist deaktiviert, bis du lokal ein Passwort und einen geheimen Sitzungsschlüssel festlegst.</p>
+  <p>Erstelle in <code>boxing-app</code> die Datei <code>.env</code> (sie wird nicht auf GitHub hochgeladen) mit:</p>
+  <pre>FIGHTBASE_ADMIN_PASSWORD=DEIN_LANGES_SICHERES_PASSWORT
+FIGHTBASE_SECRET_KEY=HIER_EIN_ZUFAELLIGER_GEHEIMER_SCHLUESSEL</pre>
+  <p>Erzeuge den geheimen Schlüssel im VS-Code-Terminal mit <code>python -c "import secrets; print(secrets.token_urlsafe(40))"</code> und kopiere das Ergebnis hinter <code>FIGHTBASE_SECRET_KEY=</code>. Verwende ein selbst gewähltes Passwort mit mindestens zehn Zeichen.</p>
+  <p>Starte danach <code>python app.py</code> neu und öffne <code>/admin</code>.</p>
+ </section>
+ {% else %}
+ <form method="post" action="{{ url_for('admin.login') }}" class="admin-panel admin-login">
+  <input type="hidden" name="csrf_token" value="{{ token }}">
+  <label for="admin-password">Admin-Passwort</label>
+  <input id="admin-password" type="password" name="password" required minlength="10" autocomplete="current-password" placeholder="Dein Admin-Passwort" autofocus>
+  {% if message %}<p class="admin-error">{{ message }}</p>{% endif %}
+  <button type="submit" class="cta">SICHER ANMELDEN →</button>
+ </form>
+ {% endif %}
+</div>
+{% endblock %}
