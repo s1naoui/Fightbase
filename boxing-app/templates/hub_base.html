@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Fightbase · Boxing Hub{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static',filename='hub.css') }}"></head>
+<body>
+<header class="topbar"><div class="top-inner"><a class="brand" href="{{ url_for('hub.dashboard') }}">🥊 FIGHT<span>BASE</span><small>BOXING INTELLIGENCE</small></a>
+<nav><a href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kämpfe</a><a href="{{ url_for('hub.dashboard',tab='results') }}">Ergebnisse</a><a href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a><a href="{{ url_for('hub.dashboard',tab='events') }}">Events</a></nav>
+<a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a></div></header>
+<main class="container">
+{% if not status.configured %}
+<div class="notice">API noch nicht verbunden. Lege <code>boxing-app/.env</code> an und trage <code>BOXING_API_KEY</code> ein. Bis dahin werden keine Kämpfe erfunden.</div>
+{% elif status.error %}<div class="notice">API-Problem: {{ status.error }}. Bereits synchronisierte Einträge bleiben sichtbar.</div>{% endif %}
+{% block main %}{% endblock %}
+</main>
+<footer><strong>FIGHT<span>BASE</span></strong><p>Quelle: Boxing Data API · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
+<script>
+document.querySelectorAll("[data-fighter-photo]").forEach(function(box){
+ const id=box.dataset.fighterPhoto; if(!id)return;
+ const load=async function(){try{
+  const res=await fetch("{{ url_for('hub.dashboard') }}api/foto/"+encodeURIComponent(id));
+  if(!res.ok)return;
+  const data=await res.json();
+  if(!data.url||!data.url.startsWith("https://"))return;
+  const img=document.createElement("img");img.alt=box.dataset.fighterName||"Boxer";img.loading="lazy";img.src=data.url;
+  img.onerror=function(){img.remove()};box.prepend(img);
+  const source=box.querySelector("[data-source]");if(source&&data.source){source.href=data.source;source.hidden=false;}
+ }catch(_){}};
+ if("IntersectionObserver" in window){const obs=new IntersectionObserver(function(entries){if(entries[0].isIntersecting){obs.disconnect();load();}},{rootMargin:"250px"});obs.observe(box)}else{load()}
+});
+{% if page=='dashboard' %}
+const initial={{ (status.last_success or '')|tojson }};
+let cycles=0;const timer=setInterval(async function(){if(++cycles>20){clearInterval(timer);return;}
+ try{const res=await fetch("{{ url_for('hub.status') }}",{cache:"no-store"});const data=await res.json();
+ if(data.last_success && data.last_success!==initial){location.reload();}
+ }catch(_){}
+},15000);
+{% endif %}
+</script>{% block scripts %}{% endblock %}
+</body></html>
