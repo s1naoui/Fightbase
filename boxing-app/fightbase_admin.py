@@ -56,6 +56,11 @@ def init_admin(app):
         PERMANENT_SESSION_LIFETIME=timedelta(minutes=45),
         MAX_CONTENT_LENGTH=6*1024*1024,
     )
+    ensure_tables()
+    app.register_blueprint(bp)
+    apply_manual_records()
+
+def ensure_tables():
     with feed.connect() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS hub_admin_photos(
             fighter_id TEXT PRIMARY KEY,
@@ -66,9 +71,6 @@ def init_admin(app):
             fighter_id TEXT PRIMARY KEY,
             wins INTEGER, losses INTEGER, draws INTEGER, ko_wins INTEGER,
             source_url TEXT NOT NULL, updated_at TEXT NOT NULL)""")
-    app.register_blueprint(bp)
-    apply_manual_records()
-
 def apply_manual_records():
     """Reapply user's sourced corrections after seeded stat refresh."""
     with feed.connect() as db:
