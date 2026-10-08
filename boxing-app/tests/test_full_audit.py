@@ -40,6 +40,33 @@ class FightbaseAudit(unittest.TestCase):
              (fighter_key("Daniel Dubois"),))
         self.assertIn(b"Uhrzeit nicht best",self.client.get("/kampf/"+dubois["id"]).data)
 
+    def test_all_reviewed_pairings_have_records_and_sources(self):
+        from verified_fights import SCHEDULE,RECORDS,fighter_key
+        self.assertEqual(len(SCHEDULE),8)
+        self.assertGreaterEqual(len(RECORDS),16)
+        for start,a,b,*other in SCHEDULE:
+            for name in (a,b):
+                person=feed.one("SELECT * FROM hub_fighters WHERE id=?",
+                                (fighter_key(name),))
+                self.assertIsNotNone(person,name)
+                self.assertIsNotNone(person["wins"],name)
+                self.assertIsNotNone(person["losses"],name)
+                self.assertIsNotNone(person["ko_wins"],name)
+                self.assertIsNotNone(feed.one(
+                    "SELECT source_url FROM hub_sources WHERE entity_id=?",
+                    (fighter_key(name),)))
+
+    def test_past_scheduled_bout_does_not_get_a_forecast(self):
+        from verified_fights import fighter_key
+        name=fighter_key("Daniel Dubois")
+        bout=feed.one("SELECT * FROM hub_fights WHERE a_id=?",(name,))
+        with feed.connect() as db:
+            db.execute("UPDATE hub_fights SET fight_date='2021-01-01' WHERE id=?",
+                       (bout["id"],))
+        page=self.client.get("/kampf/"+bout["id"])
+        self.assertEqual(page.status_code,200)
+        self.assertNotIn(b'three-prob-bar',page.data)
+
     def test_known_birthdates_and_records(self):
         for name,expected in (
             ("reviewed-floyd-schofield",24),

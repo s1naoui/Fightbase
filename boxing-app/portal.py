@@ -1,5 +1,5 @@
 """Routes for the Fightbase boxing news and results hub."""
-from datetime import datetime
+from datetime import datetime, date
 from flask import Blueprint, render_template, jsonify, request, redirect, url_for, abort
 from prediction import calculate_probability, calculate_three_way
 import boxing_feed as feed
@@ -54,7 +54,7 @@ def fight(fight_id):
     a=feed.fighter_detail(row["a_id"]) if row["a_id"] else None
     b=feed.fighter_detail(row["b_id"]) if row["b_id"] else None
     probability=None
-    if row["status"] in ("NOT_STARTED","LIVE") and a and b and all(
+    if row["status"] in ("NOT_STARTED","LIVE") and row["fight_date"][:10]>=date.today().isoformat() and a and b and all(
         x[field] is not None for x in (a,b) for field in ("wins","losses")
     ):
         try:
@@ -74,7 +74,7 @@ def analyse(fight_id):
         abort(404)
     a=feed.fighter_detail(row["a_id"]) if row["a_id"] else None
     b=feed.fighter_detail(row["b_id"]) if row["b_id"] else None
-    if row["status"] != "NOT_STARTED" or not a or not b or any(x[key] is None for x in (a,b) for key in ("wins","losses")):
+    if row["status"] != "NOT_STARTED" or row["fight_date"][:10]<date.today().isoformat() or not a or not b or any(x[key] is None for x in (a,b) for key in ("wins","losses")):
         return redirect(url_for("hub.fight",fight_id=fight_id))
     result=calculate_probability(
         {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"]},
