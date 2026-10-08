@@ -16,6 +16,21 @@ RECORDS = [
 ]
 # Time is the start of the event in local time, NOT fighter ring walk.
 SCHEDULE = [
+ ("2026-10-08T18:00:00-04:00","Osleys Iglesias","Oliver Zaren",
+  "Capitole de Québec","Québec City, Canada","Super Middleweight","IBF",
+  "https://fightnights.com/upcoming-boxing-schedule"),
+ ("2026-10-17T16:00:00-07:00","Sebastian Fundora","Ermal Hadribeaj",
+  "The Cosmopolitan","Las Vegas, USA","Super Welterweight","WBC",
+  "https://fightnights.com/upcoming-boxing-schedule"),
+ ("2026-10-24T18:00:00+01:00","Dalton Smith","Alberto Puello",
+  "Utilita Arena","Sheffield, United Kingdom","Super Lightweight","WBC",
+  "https://fightnights.com/upcoming-boxing-schedule"),
+ ("2026-10-24T19:00:00-05:00","Emanuel Navarrete","O'Shaquie Foster",
+  "Frost Bank Center","San Antonio, USA","Super Featherweight","",
+  "https://fightnights.com/upcoming-boxing-schedule"),
+ ("2026-11-08T18:00:00-06:00","Elif Nur Turhan","Alycia Baumgardner",
+  "College Park Center","Arlington, USA","Lightweight","IBF",
+  "https://fightnights.com/upcoming-boxing-schedule"),
  ("2026-10-10T19:00:00-04:00","Floyd Schofield","Lucas Bahdi",
   "Wintrust Arena","Chicago, USA","Lightweight","WBA",
   "https://fightnights.com/Floyd-Schofield-vs-Lucas-Bahdi-WBA-Lightweight-Title-Fight-3880"),
@@ -65,6 +80,11 @@ def seed_verified():
                 source_url=excluded.source_url,reviewed_on=excluded.reviewed_on""",
                 (fid,url,AS_OF))
         for start,a,b,venue,city,division,belt,url in SCHEDULE:
+            # Participants without reliable career records still get searchable profiles.
+            for boxer_name in (a,b):
+                db.execute("""INSERT INTO hub_fighters(id,name,division,updated_at)
+                VALUES (?,?,?,?) ON CONFLICT(id) DO NOTHING""",
+                    (fighter_key(boxer_name),boxer_name,division,AS_OF))
             fid="scheduled-"+start[:10]+"-"+fighter_key(a)+"-"+fighter_key(b)
             db.execute("""INSERT INTO hub_fights
               (id,fight_date,title,status,a_id,b_id,a_name,b_name,
