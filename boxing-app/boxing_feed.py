@@ -72,6 +72,8 @@ def init_feed():
     from boxing_rapidapi import initialize as init_rapid, reapply_saved_profiles
     init_rapid()
     reapply_saved_profiles()
+    from reviewed_result_fixes import apply as apply_result_fixes
+    apply_result_fixes()
     from fightbase_admin import ensure_tables, apply_manual_records
     ensure_tables()
     apply_manual_records()

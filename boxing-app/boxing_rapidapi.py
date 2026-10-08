@@ -281,6 +281,8 @@ def _import_bouts(items,kind):
                (fight["id"],"https://boxing-data.com/docs/endpoints/fights/",
                 date.today().isoformat(),"rapidapi-"+kind,
                 "Vom Anbieter gemeldete Zeit; Zeitzone und Ringwalk nicht garantiert"))
+    from reviewed_result_fixes import apply as apply_result_fixes
+    apply_result_fixes()
     return len(bouts)
 
 

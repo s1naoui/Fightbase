@@ -10,8 +10,7 @@
 {% if not status.configured %}
 <div class="notice">Kostenloser Datenfeed nicht erreichbar. Das historische Archiv ist weiterhin verfügbar.</div>
 {% elif status.error %}<div class="notice">API-Problem: {{ status.error }}. Bereits synchronisierte Einträge bleiben sichtbar.</div>{% endif %}
-<p class="free-note">Historisches Archiv mit datierten Kampfankündigungen. Live-Vollständigkeit und Aktualität der angekündigten Duelle sind nicht garantiert. <a href="https://github.com/edhwright/open-boxing" target="_blank" rel="noopener noreferrer">Open Boxing · MIT ↗</a></p>
-<p class="free-note">Fightbase-Daten: historisches Archiv und einzelne datierte Kampfankündigungen. Keine weltweite Echtzeit-Vollständigkeit.</p>{% block main %}{% endblock %}
+<p class="free-note">Daten: historisches Open-Boxing-Archiv, ausgewählte Kampfankündigungen und optional neuere Ergebnisse aus der Boxing Data API. Keine vollständige weltweite Echtzeitabdeckung. <a href="https://github.com/edhwright/open-boxing" target="_blank" rel="noopener noreferrer">Open Boxing · MIT ↗</a></p>{% block main %}{% endblock %}
 </main>
 <footer><strong>FIGHT<span>BASE</span></strong><p>Quellen: Open Boxing (historisch, MIT) + TheSportsDB (kostenlos) + optionale Boxing Data API · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
 <script>

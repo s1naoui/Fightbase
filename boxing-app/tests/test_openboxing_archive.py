@@ -40,7 +40,7 @@ class OpenBoxingArchiveTests(unittest.TestCase):
         result = self.client.get("/")
         self.assertEqual(result.status_code, 200)
         self.assertIn(b"KOMMENDE K", result.data)
-        self.assertIn(b"HISTORISCHE ERGEBNISSE", self.client.get("/?tab=results").data)
+        self.assertIn(b"KAMPFERGEBNISSE", self.client.get("/?tab=results").data)
         # Rumble in the Jungle is included in the historical bout archive.
         ali = feed.rows("""SELECT * FROM hub_fights
             WHERE a_name='George Foreman' AND b_name='Muhammad Ali'

@@ -156,6 +156,60 @@ class RapidApiTests(unittest.TestCase):
         fighter=feed.one("SELECT * FROM hub_fighters WHERE id='reviewed-tyson-fury'")
         self.assertEqual((fighter["wins"],fighter["ko_wins"]),(50,40))
 
+    def test_correct_omari_jones_source_date_without_extra_api_requests(self):
+        """Venue confirms 2 Oct even if an imported record says 3 Oct."""
+        fight = {
+            "id": "omari-date-test",
+            "date": "2026-10-03",
+            "status": "FINISHED",
+            "title": "Omari Jones vs Alan Sanchez",
+            "event": {
+                "id": "project-series-2",
+                "title": "Matchroom Project Series 2",
+                "date": "2026-10-03",
+                "venue": "Caribe Royale Orlando",
+            },
+            "fighters": {
+                "fighter_1": {
+                    "fighter_id": "omari-test",
+                    "full_name": "Omari Jones",
+                    "winner": True
+                },
+                "fighter_2": {
+                    "fighter_id": "sanchez-test",
+                    "full_name": "Alan Sanchez",
+                    "winner": False
+                }
+            },
+            "results": {"outcome": "TKO", "round": "2"},
+            "division": {"name": "Super Welterweight"},
+        }
+        with patch("boxing_rapidapi.requests.get") as network:
+            self.assertEqual(rapid._import_bouts([fight], "results"), 1)
+            self.assertEqual(rapid._import_bouts([fight], "results"), 1)
+            network.assert_not_called()
+        local = feed.one(
+            "SELECT * FROM hub_fights WHERE id='rapid-omari-date-test'")
+        self.assertEqual(local["fight_date"], "2026-10-02")
+        self.assertEqual(local["outcome"], "TKO")
+        self.assertEqual(local["winner_id"], "rapid-omari-test")
+        event = feed.one(
+            "SELECT * FROM hub_events WHERE id='rapid-event-project-series-2'")
+        self.assertEqual(event["event_date"], "2026-10-02")
+        source=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",
+                        (local["id"],))
+        self.assertEqual(source["source_kind"], "reviewed-api-date-correction")
+        self.assertIn("cariberoyale.com", source["source_url"])
+        feed.init_feed()
+        self.assertEqual(feed.one("SELECT fight_date FROM hub_fights WHERE id=?",
+            (local["id"],))["fight_date"], "2026-10-02")
+        result_page=self.client.get("/?tab=results")
+        self.assertEqual(result_page.status_code, 200)
+        html=result_page.get_data(as_text=True)
+        self.assertIn("KAMPFERGEBNISSE",html)
+        self.assertNotIn("Keine Live-Ergebnisse",html)
+        self.assertEqual(rapid.usage()["used"], 0)
+
     def test_admin_connection_screen_does_not_spend_credit(self):
         page=self.client.get("/admin/login")
         self.assertEqual(page.status_code,200)
