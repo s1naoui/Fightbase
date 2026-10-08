@@ -13,8 +13,8 @@ from dotenv import load_dotenv
 
 BASE = Path(__file__).resolve().parent
 DB = BASE / "fightbase.db"
-API = "https://boxing-data-api.p.rapidapi.com"
-HOST = "boxing-data-api.p.rapidapi.com"
+API = "https://www.thesportsdb.com/api/v1/json/123"
+HOST = "www.thesportsdb.com"
 DIVISIONS = ["Heavyweight","Cruiserweight","Light Heavyweight","Super Middleweight","Middleweight","Super Welterweight","Welterweight","Super Lightweight","Lightweight","Super Featherweight","Featherweight","Super Bantamweight","Bantamweight","Super Flyweight","Flyweight","Light Flyweight","Minimumweight"]
 LOCK = threading.Lock()
 RUNNING = False
@@ -23,16 +23,14 @@ def utcnow():
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
 def settings():
-    load_dotenv(BASE / ".env", override=True)
-    key = os.getenv("BOXING_API_KEY", "").strip()
-    if key.upper().startswith(("DEIN_", "YOUR_", "HIER_")):
-        key = ""
+    """TheSportsDB v1 is free and uses the public key 123."""
+    load_dotenv(BASE / ".env")
     try:
-        minutes = max(15, int(os.getenv("FEED_REFRESH_MINUTES", "180")))
-        pages = min(5, max(1, int(os.getenv("FEED_PAGES", "2"))))
+        minutes = max(60, int(os.getenv("FEED_REFRESH_MINUTES", "360")))
     except ValueError:
-        minutes, pages = 180, 2
-    return key, minutes, pages
+        minutes = 360
+    return "FREE", minutes, 1
+
 
 def connect():
     c = sqlite3.connect(DB, timeout=20)
@@ -77,32 +75,21 @@ def set_meta(key, value):
         ON CONFLICT(key) DO UPDATE SET value=excluded.value""", (key, str(value)))
 
 def get(path, params=None):
-    key, _, _ = settings()
-    if not key:
-        raise RuntimeError("BOXING_API_KEY fehlt. Bitte boxing-app/.env konfigurieren.")
+    """Fetch only TheSportsDB public v1 endpoints; never use RapidAPI."""
+    if path not in ("/eventsday.php", "/searchplayers.php"):
+        raise ValueError("Kostenlose API unterstützt diesen Endpunkt nicht")
     response = requests.get(API + path, params=params or {}, timeout=15,
-        headers={"X-RapidAPI-Key":key,"X-RapidAPI-Host":HOST,"Accept":"application/json"})
+                            headers={"Accept":"application/json","User-Agent":"FightbaseStudent/1.0"})
     response.raise_for_status()
     payload = response.json()
-    if not isinstance(payload,dict) or not isinstance(payload.get("data"),(dict,list)):
-        raise ValueError("Unerwartete Antwort der Boxing Data API")
-    if payload.get("error"):
-        raise ValueError(str(payload["error"])[:150])
+    if not isinstance(payload, dict):
+        raise ValueError("Unerwartete Antwort von TheSportsDB")
     return payload
 
+
 def pages(path, options):
-    _, _, maximum = settings()
-    records = []
-    for page in range(1, maximum+1):
-        response = get(path, {**options,"page_num":page})
-        data = response["data"]
-        if not isinstance(data,list):
-            raise ValueError("API-Liste erwartet")
-        records.extend(x for x in data if isinstance(x,dict))
-        total = (response.get("pagination") or {}).get("total_pages")
-        if not data or isinstance(total,int) and total and page >= total:
-            break
-    return records
+    raise ValueError("Paginierung ist in diesem kostenlosen Feed nicht verfügbar")
+
 
 def txt(value):
     return str(value).strip() if value is not None else ""
@@ -202,24 +189,88 @@ def save_events(records):
                  (fid,txt(item.get("title")),txt(item.get("date")),
                   txt(item.get("venue")),txt(item.get("location")),utcnow()))
 
+def _is_boxing(item):
+    sport = txt(item.get("strSport")).casefold()
+    details = " ".join(txt(item.get(k)) for k in (
+        "strLeague", "strEvent", "strDescriptionEN")).casefold()
+    return sport in ("fighting", "boxing") and any(
+        word in details for word in (
+            "boxing", "boxe", "boxen", "wbc", "wba", "ibf", "wbo", "professional boxer"))
+
+def _split_match(item):
+    left = txt(item.get("strHomeTeam"))
+    right = txt(item.get("strAwayTeam"))
+    title = txt(item.get("strEvent"))
+    if left and right:
+        return left, right
+    for separator in (" vs. ", " vs ", " v ", " - "):
+        import re
+        pieces = re.split(re.escape(separator), title, maxsplit=1, flags=re.I)
+        if len(pieces) == 2:
+            return pieces[0].strip(), pieces[1].strip()
+    return "", ""
+
+def _store_free_event(item):
+    event_id = txt(item.get("idEvent"))
+    if not event_id or not _is_boxing(item):
+        return
+    title = txt(item.get("strEvent"))
+    a, b = _split_match(item)
+    day = txt(item.get("dateEvent"))
+    stamp = (day + "T" + txt(item.get("strTime"))) if day else ""
+    status = "FINISHED" if day and day < date.today().isoformat() else "NOT_STARTED"
+    venue = txt(item.get("strVenue"))
+    league = txt(item.get("strLeague"))
+    with connect() as c:
+        c.execute("""INSERT INTO hub_events(id,title,event_date,venue,location,updated_at)
+            VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET
+            title=excluded.title,event_date=excluded.event_date,
+            venue=excluded.venue,location=excluded.location,
+            updated_at=excluded.updated_at""",
+            ("tsdb-"+event_id,title or league,day,venue,
+             txt(item.get("strCountry")),utcnow()))
+        for player in (a,b):
+            if player:
+                identifier="tsdb-"+player.casefold().strip()
+                c.execute("""INSERT INTO hub_fighters(id,name,updated_at)
+                    VALUES(?,?,?) ON CONFLICT(id) DO NOTHING""",(identifier,player,utcnow()))
+        c.execute("""INSERT INTO hub_fights
+            (id,fight_date,title,status,a_id,b_id,a_name,b_name,
+             division,event_id,event_title,venue,location,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(id) DO UPDATE SET
+            fight_date=excluded.fight_date,title=excluded.title,
+            status=excluded.status,a_id=excluded.a_id,b_id=excluded.b_id,
+            a_name=excluded.a_name,b_name=excluded.b_name,
+            event_id=excluded.event_id,event_title=excluded.event_title,
+            venue=excluded.venue,location=excluded.location,
+            updated_at=excluded.updated_at""",
+            ("tsdb-"+event_id,stamp,title,status,
+             "tsdb-"+a.casefold() if a else "",
+             "tsdb-"+b.casefold() if b else "",a,b,"",
+             "tsdb-"+event_id,league,venue,txt(item.get("strCountry")),utcnow()))
+
 def sync():
-    jobs=[
-      ("Kampfplan",lambda:save_fights(pages("/v2/fights/schedule",{"days":90,"date_sort":"ASC","page_size":50}))),
-      ("Ergebnisse",lambda:save_fights(pages("/v2/fights/",{"date_sort":"DESC","page_size":50}))),
-      ("Veranstaltungen",lambda:save_events(pages("/v2/events/schedule",{"days":90,"date_sort":"ASC","page_size":50}))),
-      ("Boxer",lambda:[save_fighter(f) for f in pages("/v2/fighters/",{"page_size":50})])
-    ]
+    """Free daily feed; coverage can be sparse, never fabricate fights."""
+    from datetime import timedelta
     errors=[]
-    successes=0
-    for name,job in jobs:
+    scanned=0
+    # Seven dates gives modest daily coverage without a paid subscription.
+    for offset in range(-2,8):
+        day=(date.today()+timedelta(days=offset)).isoformat()
         try:
-            job()
-            successes+=1
-        except (requests.RequestException,ValueError,RuntimeError,TypeError) as e:
-            errors.append(name+": "+str(e)[:150])
-    if successes:
+            payload=get("/eventsday.php",{"d":day,"s":"Fighting"})
+            for event in payload.get("events") or []:
+                if isinstance(event,dict) and _is_boxing(event):
+                    _store_free_event(event)
+                    scanned+=1
+        except (requests.RequestException,ValueError,TypeError) as exc:
+            errors.append(day+": "+str(exc)[:90])
+    if len(errors)<10:
         set_meta("last_success",utcnow())
-    set_meta("error"," | ".join(errors))
+    set_meta("error"," | ".join(errors[:2]) if errors else "")
+    set_meta("feed_note","Kostenloser Feed: "+str(scanned)+" Boxeinträge gefunden; keine Vollständigkeitsgarantie.")
+
 
 def _worker():
     global RUNNING
@@ -257,9 +308,10 @@ def start_scheduler():
     threading.Thread(target=loop,name="fightbase-scheduler",daemon=True).start()
 
 def status():
-    key,_,_=settings()
-    return dict(configured=bool(key),syncing=RUNNING,
-        last_success=meta("last_success"),error=meta("error"))
+    return dict(configured=True,syncing=RUNNING,
+        last_success=meta("last_success"),error=meta("error"),
+        note=meta("feed_note","Kostenlose TheSportsDB API aktiv. Boxabdeckung begrenzt."))
+
 
 def rows(sql,params=()):
     with connect() as c:
@@ -292,82 +344,58 @@ def fighters(search=""):
        COALESCE(wins,0) DESC,name LIMIT 80""")
 
 def search_fighter(term):
-    if len(term)<3 or not settings()[0]:
+    """Search free sports profiles, avoiding any fabricated boxer statistics."""
+    if len(term)<3:
         return
-    marker="search:"+term.casefold()
+    marker="free-search:"+term.casefold()
     try:
-        if datetime.now(timezone.utc)-datetime.fromisoformat(meta(marker))<timedelta(hours=8):
+        if datetime.now(timezone.utc)-datetime.fromisoformat(meta(marker))<timedelta(hours=12):
             return
     except ValueError:
         pass
     try:
-        for person in get("/v2/fighters/",{"name":term,"page_size":50})["data"]:
-            save_fighter(person)
+        payload=get("/searchplayers.php",{"p":term})
+        for item in payload.get("player") or []:
+            if not isinstance(item,dict):
+                continue
+            description=txt(item.get("strDescriptionEN")).lower()
+            sport=txt(item.get("strSport")).lower()
+            if sport not in ("fighting","boxing") or "box" not in description:
+                continue
+            fid=txt(item.get("idPlayer"))
+            name=txt(item.get("strPlayer"))
+            if not fid or not name:
+                continue
+            born=txt(item.get("dateBorn"))
+            age=None
+            try:
+                born_date=date.fromisoformat(born)
+                age=(date.today().year-born_date.year)-(
+                    (date.today().month,date.today().day)<(born_date.month,born_date.day))
+            except ValueError:
+                pass
+            save_fighter({"id":"tsdb-p-"+fid,"name":name,"age":age,
+                "nationality":item.get("strNationality"),
+                "division":{"name":txt(item.get("strPosition"))}})
         set_meta(marker,utcnow())
-    except (requests.RequestException,RuntimeError,ValueError,TypeError):
+    except (requests.RequestException,ValueError,TypeError):
         pass
 
+
 def fighter_detail(fid):
-    cached=one("SELECT * FROM hub_fighters WHERE id=?",(fid,))
-    if not cached:
-        return None
-    stale=True
-    try:
-        stale=(datetime.now(timezone.utc)-datetime.fromisoformat(cached["updated_at"]))>timedelta(hours=24)
-    except (ValueError,TypeError):
-        pass
-    if settings()[0] and (cached["wins"] is None or stale):
-        try:
-            person=get("/v2/fighters/"+quote(fid,safe=""))["data"]
-            if isinstance(person,dict):
-                save_fighter(person)
-        except (requests.RequestException,RuntimeError,ValueError,TypeError):
-            pass
     return one("SELECT * FROM hub_fighters WHERE id=?",(fid,))
+
 
 def event_fights(event_id):
     if not event_id or len(event_id)>80:
         return []
-    marker="event:"+event_id
-    stale=True
-    try:
-        stale=(datetime.now(timezone.utc)-datetime.fromisoformat(meta(marker)))>timedelta(hours=6)
-    except ValueError:
-        pass
-    if stale and settings()[0]:
-        try:
-            save_fights(get("/v2/fights/",{"event_id":event_id,"page_size":50})["data"])
-            set_meta(marker,utcnow())
-        except (requests.RequestException,RuntimeError,ValueError,TypeError):
-            pass
     return rows("SELECT * FROM hub_fights WHERE event_id=? ORDER BY fight_date",(event_id,))
 
+
 def rankings(page=1):
-    if page not in range(1,18):
-        return []
-    cached=one("SELECT * FROM hub_rankings WHERE page=?",(page,))
-    if cached:
-        try:
-            if datetime.now(timezone.utc)-datetime.fromisoformat(cached["checked_at"])<timedelta(hours=24):
-                return json.loads(cached["content"])
-        except (ValueError,TypeError):
-            pass
-    if not settings()[0]:
-        return json.loads(cached["content"]) if cached else []
-    try:
-        data=get("/v2/rankings/",{"page_num":page})["data"]
-        if not isinstance(data,list):
-            return []
-        with connect() as c:
-            c.execute("""INSERT INTO hub_rankings VALUES (?,?,?)
-               ON CONFLICT(page) DO UPDATE SET content=excluded.content,checked_at=excluded.checked_at""",
-               (page,json.dumps(data),utcnow()))
-            for org in data:
-                for item in (org.get("rankings") or [])+(org.get("champions") or []):
-                    add_stub(c,item)
-        return data
-    except (requests.RequestException,RuntimeError,ValueError,TypeError):
-        return json.loads(cached["content"]) if cached else []
+    # No reliable, current, free WBA/WBC/IBF/WBO ranking source.
+    return []
+
 
 def photo(fid,name):
     """One cached picture per fighter; not guaranteed to be a recent ring photograph."""

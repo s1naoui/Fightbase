@@ -2,7 +2,7 @@
 {% block title %}Fightbase | Boxkämpfe & Ergebnisse{% endblock %}
 {% block main %}
 <section class="hero"><div class="eyebrow">FIGHTBASE · BOXING HUB</div>
-<h1>ALLE KÄMPFE.<br><em>ALLE FAKTEN.</em></h1><p>Kampfplan, Ergebnisse, Boxerprofile und Weltranglisten – automatisch aus dem angebundenen Boxsport-Datenfeed.</p>
+<h1>ALLE KÄMPFE.<br><em>ALLE FAKTEN.</em></h1><p>Kampfplan, Ergebnisse und Boxerprofile aus einer kostenlosen Datenquelle. Die Boxsport-Abdeckung kann unvollständig sein.</p>
 <a class="cta" href="{{ url_for('hub.dashboard',tab='upcoming') }}">KÄMPFE ENTDECKEN →</a><a class="cta secondary" href="{{ url_for('hub.dashboard',tab='fighters') }}">BOXER ANSEHEN</a>
 <div class="hero-vs" aria-hidden="true">VS</div></section>
 <div class="metrics"><div><strong>{{ upcoming|length }}</strong>Kämpfe in der Auswahl</div><div><strong>{{ results|length }}</strong>Letzte Ergebnisse</div><div><strong>{{ fighters|length }}</strong>Boxer in der Auswahl</div><div><strong>{{ events|length }}</strong>Events</div></div>
@@ -18,7 +18,7 @@
 <div class="date"><strong>{{ fight.fight_date|fightdate }}</strong><small>{{ fight.division or 'Gewicht offen' }}</small></div>
 <div class="matchup"><b class="red">{{ fight.a_name or 'Noch offen' }}</b><span>VS</span><b class="blue">{{ fight.b_name or 'Noch offen' }}</b></div>
 <div class="details"><b class="{{ 'live' if fight.status=='LIVE' else 'pill' }}">{{ {'LIVE':'LIVE','FINISHED':'ERGEBNIS','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</b><small>{{ (fight.outcome ~ (' · Runde ' ~ fight.result_round if fight.result_round else '')) if fight.outcome else (fight.venue or fight.location or '') }}</small></div><span class="arrow">→</span></a>
-{% endfor %}</div>{% else %}<div class="empty"><h3>Noch keine Kämpfe vorhanden</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'Die API liefert für diese Ansicht aktuell keine Einträge oder ist noch nicht verbunden.' }}</p></div>{% endif %}
+{% endfor %}</div>{% else %}<div class="empty"><h3>Noch keine Kämpfe vorhanden</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'TheSportsDB liefert in diesem kostenlosen Feed zurzeit keine passenden Boxkämpfe.' }}</p></div>{% endif %}
 {% elif tab=='fighters' %}
 <form class="search" action="{{ url_for('hub.dashboard') }}"><input type="hidden" name="tab" value="fighters"><input type="search" name="q" maxlength="80" placeholder="Boxer suchen, z. B. Usyk oder Fury" value="{{ search }}"><button type="submit">SUCHEN →</button></form>
 <p class="hint">Bei einer Suche mit mindestens drei Zeichen wird das Verzeichnis bei Bedarf durch API-Daten ergänzt.</p>
@@ -32,11 +32,11 @@
 {% endfor %}</div>{% else %}<div class="empty">Keine anstehenden Events im Feed.</div>{% endif %}
 {% elif tab=='rankings' %}
 <form class="search" action="{{ url_for('hub.dashboard') }}"><input type="hidden" name="tab" value="rankings"><label for="division">Gewichtsklasse</label><select name="division" id="division">{% for d in divisions %}<option value="{{ loop.index }}" {{ 'selected' if division==loop.index else '' }}>{{ d }}</option>{% endfor %}</select><button type="submit">ANZEIGEN</button></form>
-<p class="hint">Ranglisten nach Gewichtsklasse von IBF, WBA, WBC und WBO laut Datenanbieter.</p>
+<p class="hint">Offizielle aktuelle Ranglisten sind über den kostenlosen Feed nicht zuverlässig verfügbar.</p>
 {% if ranking %}<div class="rank-grid">{% for org in ranking %}<section class="rank-card"><div class="eyebrow">{{ org.division.name if org.division else '' }}</div><h3>{{ org.organization.name if org.organization else 'Organisation' }}</h3><h4>Weltmeister</h4>
 {% for person in org.champions or [] %}<div class="rank-line">{{ person.title_type or 'Titel' }}: {% if person.fighter_id %}<a href="{{ url_for('hub.fighter',fighter_id=person.fighter_id) }}">{{ person.fighter_name or '–' }}</a>{% else %}Vakant{% endif %}</div>{% endfor %}
 <h4>Rangliste</h4>{% for person in org.rankings or [] %}<div class="rank-line"><b>{{ person.rank if person.rank is not none else '–' }}.</b> {% if person.fighter_id %}<a href="{{ url_for('hub.fighter',fighter_id=person.fighter_id) }}">{{ person.fighter_name or 'Unbekannt' }}</a>{% else %}Vakant{% endif %}</div>{% endfor %}</section>{% endfor %}</div>
-{% else %}<div class="empty">Noch keine Ranglisten geladen. Prüfe deinen API-Zugang und das Kontingent.</div>{% endif %}
+{% else %}<div class="empty">Für offizielle aktuelle Ranglisten ist noch keine frei zugängliche, zuverlässige Quelle integriert.</div>{% endif %}
 {% endif %}
 </section>
 {% endblock %}
