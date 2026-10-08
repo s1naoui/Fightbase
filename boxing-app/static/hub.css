@@ -133,3 +133,9 @@ footer { font-size: 14px; line-height: 1.65; }
   .info-panel dl { font-size: 15px; }
   .probabilities small { font-size: 12px; }
 }
+
+/* Portraits: preserve aspect ratio and prioritize faces for selected images */
+.fighter-photo img,.profile-photo img,.duel-photo img{object-fit:cover;object-position:center 24%;}
+.missing-photo[hidden]{display:none!important}
+.fighter-photo img{transition:transform .28s ease}
+.fighter-card:hover .fighter-photo img{transform:scale(1.04)}

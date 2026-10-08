@@ -110,7 +110,8 @@ def photo(fighter_id):
     person=feed.one("SELECT * FROM hub_fighters WHERE id=?",(fighter_id,))
     if not person:
         abort(404)
-    return jsonify(feed.photo(fighter_id,person["name"]))
+    from identity_photos import quick_verified_photo
+    return jsonify(quick_verified_photo(fighter_id,person["name"]))
 
 @bp.route("/api/status")
 def status():

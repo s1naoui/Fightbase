@@ -8,9 +8,9 @@
 <a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a></div></header>
 <main class="container">
 {% if not status.configured %}
-<div class="notice">Kostenloser Datenfeed vorübergehend nicht verfügbar.</div>
+<div class="notice">Kostenloser Datenfeed nicht erreichbar. Das historische Archiv ist weiterhin verfügbar.</div>
 {% elif status.error %}<div class="notice">API-Problem: {{ status.error }}. Bereits synchronisierte Einträge bleiben sichtbar.</div>{% endif %}
-<p class="free-note">Historisches Archiv mit einzeln belegten aktuellen Kampfankündigungen. Veraltete Kampfplan-Daten werden nicht als kommende Veranstaltungen dargestellt. <a href="https://github.com/edhwright/open-boxing" target="_blank" rel="noopener noreferrer">Open Boxing · MIT ↗</a></p>
+<p class="free-note">Historisches Archiv mit datierten Kampfankündigungen. Live-Vollständigkeit und Aktualität der angekündigten Duelle sind nicht garantiert. <a href="https://github.com/edhwright/open-boxing" target="_blank" rel="noopener noreferrer">Open Boxing · MIT ↗</a></p>
 <p class="free-note">{{ status.note or "Kostenlose Datenquellen sind möglicherweise unvollständig." }}</p>{% block main %}{% endblock %}
 </main>
 <footer><strong>FIGHT<span>BASE</span></strong><p>Quellen: Open Boxing (historisch, MIT) + TheSportsDB (kostenlos) · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
@@ -21,9 +21,14 @@ document.querySelectorAll("[data-fighter-photo]").forEach(function(box){
   const res=await fetch("{{ url_for('hub.dashboard') }}api/foto/"+encodeURIComponent(id));
   if(!res.ok)return;
   const data=await res.json();
+  if(data.pending){
+    const old=Number(box.dataset.retries||0);
+    if(old<5){box.dataset.retries=String(old+1);setTimeout(load,2000);}
+    return;
+  }
   if(!data.url||!data.url.startsWith("https://"))return;
   const img=document.createElement("img");img.alt=box.dataset.fighterName||"Boxer";img.loading="lazy";img.src=data.url;
-  img.onerror=function(){img.remove()};box.prepend(img);
+  img.onerror=function(){img.remove()};img.onload=function(){const placeholder=box.querySelector(".missing-photo");if(placeholder)placeholder.hidden=true;};box.prepend(img);
   const source=box.querySelector("[data-source]");if(source&&data.source){source.href=data.source;source.hidden=false;}
  }catch(_){}};
  if("IntersectionObserver" in window){const obs=new IntersectionObserver(function(entries){if(entries[0].isIntersecting){obs.disconnect();load();}},{rootMargin:"250px"});obs.observe(box)}else{load()}

@@ -7,10 +7,15 @@ Image dates are not guaranteed to be current.
 import re
 import unicodedata
 from datetime import datetime,timedelta,timezone
+from concurrent.futures import ThreadPoolExecutor
+import threading
 from urllib.parse import quote
 import requests
 
 API="https://www.wikidata.org/w/api.php"
+PHOTO_POOL=ThreadPoolExecutor(max_workers=3,thread_name_prefix="fightbase-photos")
+PHOTO_PENDING=set()
+PHOTO_LOCK=threading.Lock()
 HEADERS={"User-Agent":"FightbaseEducation/2.0 (GitHub s1naoui/Fightbase student project)",
          "Accept":"application/json"}
 
@@ -45,6 +50,41 @@ def choose_photo(name, search, entities):
     return {"url":"https://commons.wikimedia.org/wiki/Special:FilePath/"+key+"?width=900",
             "source":"https://commons.wikimedia.org/wiki/File:"+key,
             "verified":True}
+
+def photo_from_cache(fighter_id):
+    from boxing_feed import connect
+    with connect() as db:
+        db.execute("""CREATE TABLE IF NOT EXISTS hub_verified_images(
+            fighter_id TEXT PRIMARY KEY,image_url TEXT,source_url TEXT,
+            checked_at TEXT NOT NULL)""")
+        return db.execute("SELECT * FROM hub_verified_images WHERE fighter_id=?",
+                          (fighter_id,)).fetchone()
+
+def quick_verified_photo(fighter_id,name):
+    """Return cached image immediately and queue bounded background lookup."""
+    if not fighter_id or not name:
+        return {"url":None,"source":None,"pending":False}
+    cached=photo_from_cache(fighter_id)
+    if cached:
+        try:
+            if datetime.now(timezone.utc)-datetime.fromisoformat(cached["checked_at"])<timedelta(days=30):
+                return {"url":cached["image_url"],"source":cached["source_url"],
+                        "pending":False}
+        except ValueError:
+            pass
+    with PHOTO_LOCK:
+        if fighter_id not in PHOTO_PENDING and len(PHOTO_PENDING)<24:
+            PHOTO_PENDING.add(fighter_id)
+            PHOTO_POOL.submit(_do_photo_lookup,fighter_id,name)
+    return {"url":cached["image_url"] if cached else None,
+            "source":cached["source_url"] if cached else None,"pending":True}
+
+def _do_photo_lookup(fighter_id,name):
+    try:
+        verified_photo(fighter_id,name)
+    finally:
+        with PHOTO_LOCK:
+            PHOTO_PENDING.discard(fighter_id)
 
 def fetch(params):
     result=requests.get(API,params={"format":"json",**params},

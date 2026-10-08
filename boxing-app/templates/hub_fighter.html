@@ -12,12 +12,12 @@
 <div class="stats"><div><b>{{ fighter.wins if fighter.wins is not none else '–' }}</b>Siege</div><div><b>{{ fighter.losses if fighter.losses is not none else '–' }}</b>Niederlagen</div><div><b>{{ fighter.draws if fighter.draws is not none else '–' }}</b>Unentschieden</div><div><b>{{ fighter.ko_wins if fighter.ko_wins is not none else "–" }}</b>K.o.-Siege</div></div></div></div>
 <div class="detail-grid">
 <section class="info-panel"><div class="eyebrow">PROFIL</div><h2>Statistiken</h2><dl>
-<dt>Alter laut API</dt><dd>{{ fighter.age if fighter.age is not none else '–' }}</dd>
+<dt>Alter (falls belegt)</dt><dd>{{ fighter.age if fighter.age is not none else '–' }}</dd>
 <dt>Nationalität</dt><dd>{{ fighter.nationality or '–' }}</dd>
 <dt>Gewichtsklasse</dt><dd>{{ fighter.division or '–' }}</dd>
 <dt>Auslage</dt><dd>{{ fighter.stance or '–' }}</dd>
 <dt>Körpergröße</dt><dd>{{ fighter.height or '–' }}</dd>
-<dt>K.o.-Siege</dt><dd>{{ fighter.ko_wins if fighter.ko_wins is not none else '–' }}</dd>
+<dt>Organisation</dt><dd>Nicht zuverlässig erfasst</dd><dt>K.o.-Siege</dt><dd>{{ fighter.ko_wins if fighter.ko_wins is not none else '–' }}</dd>
 </dl><p class="hint">Bilanzen können zeitverzögert sein. Fotos werden nur bei eindeutiger Boxerzuordnung gezeigt; das Aufnahmejahr ist nicht garantiert.</p></section>
 <section class="info-panel"><div class="eyebrow">FIGHT HISTORY</div><h2>Kämpfe im Feed</h2>
 {% if matches %}<div class="profile-fights">{% for match in matches %}<a href="{{ url_for('hub.fight',fight_id=match.id) }}"><strong>{{ match.title or (match.a_name ~ ' vs ' ~ match.b_name) }}</strong><small>{{ match.fight_date|fightdate }} · {{ match.outcome or match.status }}</small></a>{% endfor %}</div>

@@ -24,7 +24,7 @@
 <a class="fight-row" href="{{ url_for('hub.fight',fight_id=fight.id) }}">
 <div class="date"><strong>{{ fight.fight_date|fightdate }}</strong><small>{{ fight.division or 'Gewicht offen' }}</small></div>
 <div class="matchup"><b class="red">{{ fight.a_name or 'Noch offen' }}</b><span>VS</span><b class="blue">{{ fight.b_name or 'Noch offen' }}</b></div>
-<div class="details"><b class="{{ 'live' if fight.status=='LIVE' else 'pill' }}">{{ {'LIVE':'LIVE','FINISHED':'ERGEBNIS','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</b><small>{{ (fight.outcome ~ (' · Runde ' ~ fight.result_round if fight.result_round else '')) if fight.outcome else (fight.venue or fight.location or '') }}</small></div><span class="arrow">→</span></a>
+<div class="details"><b class="{{ 'live' if fight.status=='LIVE' else 'pill' }}">{{ {'LIVE':'LIVE','FINISHED':'ERGEBNIS','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</b><small>{% if fight.status == 'FINISHED' %}{% if fight.winner_id and fight.winner_id == fight.a_id %}Sieger: {{ fight.a_name }} · {% elif fight.winner_id and fight.winner_id == fight.b_id %}Sieger: {{ fight.b_name }} · {% elif fight.outcome and 'draw' in fight.outcome|lower %}Unentschieden · {% endif %}{{ fight.outcome or 'Ausgang unbekannt' }}{{ ' · Runde ' ~ fight.result_round if fight.result_round else '' }}{% else %}{{ fight.venue or fight.location or 'Veranstaltungsort offen' }}{% endif %}</small></div><span class="arrow">→</span></a>
 {% endfor %}</div>{% else %}<div class="empty"><h3>Keine bestätigten Boxerduelle verfügbar</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'Im freien Live-Feed sind derzeit keine bestätigten zukünftigen Duelle. <a href="/?tab=results">Historische Boxkämpfe im Archiv ansehen →</a>' }}</p></div>{% endif %}
 {% elif tab=='fighters' %}
 <form class="search" action="{{ url_for('hub.dashboard') }}"><input type="hidden" name="tab" value="fighters"><input type="search" name="q" maxlength="80" placeholder="Boxer suchen, z. B. Usyk oder Fury" value="{{ search }}"><button type="submit">SUCHEN →</button></form>
@@ -32,7 +32,7 @@
 {% if fighters %}<div class="fighter-grid">{% for fighter in fighters %}
 <a class="fighter-card" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}"><div class="fighter-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span class="missing-photo">Kein verifiziertes Foto</span></div>
 <div class="fighter-info"><small>{{ fighter.division or 'BOXING' }}</small><h3>{{ fighter.name }}</h3><p>{{ (fighter.wins ~ '–' ~ fighter.losses ~ '–' ~ (fighter.draws or 0)) if fighter.wins is not none and fighter.losses is not none else 'Bilanz noch nicht verfügbar' }}</p><b>PROFIL ANSEHEN →</b></div></a>
-{% endfor %}</div>{% else %}<div class="empty">Keine Boxer gefunden. Bitte API-Zugang prüfen oder andere Schreibweise versuchen.</div>{% endif %}
+{% endfor %}</div>{% else %}<div class="empty">Keine Boxer gefunden. Bitte eine andere Schreibweise versuchen. Das kostenlose Archiv ist unvollständig.</div>{% endif %}
 {% elif tab=='organizations' %}
 <form class="search" action="{{ url_for('hub.dashboard') }}">
 <input type="hidden" name="tab" value="organizations">

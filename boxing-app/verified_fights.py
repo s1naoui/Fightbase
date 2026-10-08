@@ -7,10 +7,10 @@ from datetime import date
 
 AS_OF = "2026-10-08"
 RECORDS = [
- ("Floyd Schofield",19,0,0,13,None,"USA","Lightweight","https://fightnights.com/boxers/Floyd-Schofield-record-5856"),
- ("Lucas Bahdi",20,0,0,15,None,"Canada","Lightweight","https://www.fightnights.com/boxers/Lucas-Bahdi-record-6090"),
+ ("Floyd Schofield",19,0,0,13,"2002-08-27","USA","Lightweight","https://fightnights.com/boxers/Floyd-Schofield-record-5856"),
+ ("Lucas Bahdi",20,0,0,15,"1994-01-27","Canada","Lightweight","https://www.fightnights.com/boxers/Lucas-Bahdi-record-6090"),
  ("Daniel Dubois",23,3,0,22,"1997-09-06","United Kingdom","Heavyweight","https://fightnights.com/boxers/Daniel-Dubois-record-5280"),
- ("Fabio Wardley",20,1,1,19,None,"United Kingdom","Heavyweight","https://fightnights.com/boxers/Fabio-Wardley-record-5816"),
+ ("Fabio Wardley",20,1,1,19,"1994-12-18","United Kingdom","Heavyweight","https://fightnights.com/boxers/Fabio-Wardley-record-5816"),
  ("Tyson Fury",36,2,1,25,"1988-06-01","United Kingdom","Heavyweight","https://www.fightnights.com/boxers/Tyson-Fury-record-1734"),
  ("Anthony Joshua",30,4,0,27,"1989-10-15","United Kingdom","Heavyweight","https://fightnights.com/boxers/Anthony-Joshua-record-3699"),
 ]

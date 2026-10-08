@@ -167,176 +167,24 @@ def photo_score(title, name, width, height):
 
 
 def search_photos(name):
-    """Lädt verschiedene Bildvorschläge von Wikimedia Commons."""
-    name = canonical_name(name)
-
-    queries = [
-        f'"{name}" boxing',
-        f'"{name}" fight',
-        f'"{name}"',
-    ]
-
-    candidates = {}
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
-    for query in queries:
-        params = {
-            "action": "query",
-            "format": "json",
-            "formatversion": 2,
-            "generator": "search",
-            "gsrsearch": query,
-            "gsrnamespace": 6,
-            "gsrlimit": 25,
-            "prop": "imageinfo",
-            "iiprop": "url|mime|size",
-            "iiurlwidth": 1300
-        }
-
-        try:
-            response = session.get(
-                COMMONS_API,
-                params=params,
-                timeout=10
-            )
-            response.raise_for_status()
-            data = response.json()
-
-            pages = data.get("query", {}).get("pages", [])
-
-            for page in pages:
-                info_list = page.get("imageinfo", [])
-
-                if not info_list:
-                    continue
-
-                info = info_list[0]
-
-                if info.get("mime") not in (
-                    "image/jpeg", "image/png", "image/webp"
-                ):
-                    continue
-
-                title = page.get("title", "")
-                width = int(info.get("width") or 0)
-                height = int(info.get("height") or 0)
-
-                score = photo_score(title, name, width, height)
-
-                # Nicht passende und klar ungeeignete
-                # Dateien werden ausgeschlossen.
-                if score < 10:
-                    continue
-
-                url = info.get("thumburl") or info.get("url")
-                source = info.get("descriptionurl")
-
-                if not (
-                    isinstance(url, str)
-                    and url.startswith("https://")
-                    and isinstance(source, str)
-                    and source.startswith("https://")
-                ):
-                    continue
-
-                candidates[title] = {
-                    "url": url,
-                    "source": source,
-                    "title": title.removeprefix("File:"),
-                    "score": score
-                }
-
-        except (requests.RequestException, ValueError):
-            continue
-
-    session.close()
-
-    photos = sorted(
-        candidates.values(),
-        key=lambda p: p["score"],
-        reverse=True
-    )
-
-    return photos[:12]
+    """Use only portraits of a uniquely identified Wikidata boxer."""
+    from identity_photos import verified_photo
+    from boxing_feed import one
+    canonical=canonical_name(name)
+    row=one("SELECT id FROM hub_fighters WHERE lower(name)=lower(?) ORDER BY id LIMIT 1",
+            (canonical,))
+    key=row["id"] if row else "legacy-"+get_key(canonical)
+    verified=verified_photo(key,canonical)
+    if not verified.get("url"):
+        return []
+    return [{"url":verified["url"],"source":verified["source"],"title":canonical,
+             "score":100}]
 
 
 def get_photo_gallery(name, refresh=False):
-    key = get_key(name)
-    record = read_photo_record(name)
-
-    if record:
-        try:
-            old_photos = json.loads(record["candidates"])
-        except (ValueError, TypeError):
-            old_photos = []
-
-        selected = int(record["selected_index"])
-
-        try:
-            updated = datetime.fromisoformat(record["updated_at"])
-        except ValueError:
-            updated = datetime.min
-
-        # Fotoauswahl 7 Tage zwischenspeichern.
-        if (
-            not refresh
-            and datetime.now() - updated < timedelta(days=7)
-        ):
-            return {
-                "photos": old_photos,
-                "selected": min(
-                    max(selected, 0),
-                    max(len(old_photos) - 1, 0)
-                )
-            }
-    else:
-        old_photos = []
-        selected = 0
-
-    photos = search_photos(name)
-
-    # Bei temporärem API-Ausfall vorhandene Fotos behalten.
-    if not photos and old_photos:
-        photos = old_photos
-
-    # Gewähltes Foto nach Aktualisierung wiederfinden.
-    previous_url = None
-
-    if old_photos and 0 <= selected < len(old_photos):
-        previous_url = old_photos[selected].get("source")
-
-    new_index = 0
-
-    if previous_url:
-        for index, photo in enumerate(photos):
-            if photo.get("source") == previous_url:
-                new_index = index
-                break
-
-    with get_db() as db:
-        db.execute("""
-            INSERT INTO photo_choices (
-                fighter_key, candidates,
-                selected_index, updated_at
-            )
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(fighter_key)
-            DO UPDATE SET
-                candidates = excluded.candidates,
-                selected_index = excluded.selected_index,
-                updated_at = excluded.updated_at
-        """, (
-            key,
-            json.dumps(photos, ensure_ascii=False),
-            new_index,
-            datetime.now().isoformat()
-        ))
-
-    return {
-        "photos": photos,
-        "selected": new_index
-    }
+    """Reject previous unverified Commons matches; return one verified image."""
+    photos=search_photos(name)
+    return {"photos":photos,"selected":0}
 
 
 def get_selected_photo(gallery):
@@ -455,7 +303,7 @@ def select_photo():
     record = read_photo_record(name)
 
     if not record:
-        return jsonify({"error": "Keine Bilder vorhanden"}), 404
+        return jsonify({"error":"Foto wird automatisch überprüft; manuelle Auswahl entfällt"}),400
 
     try:
         photos = json.loads(record["candidates"])
