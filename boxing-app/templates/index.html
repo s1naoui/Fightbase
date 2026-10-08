@@ -1,0 +1,508 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Fightbase | Boxing Analytics</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="arena-background" aria-hidden="true">
+    <div class="arena-light light-red"></div>
+    <div class="arena-light light-blue"></div>
+</div>
+
+<header class="navbar">
+    <div class="nav-container">
+        <a class="logo" href="{{ url_for('home') }}">
+            <span class="logo-glove">🥊</span>
+            <span class="logo-text">
+                FIGHT<span>BASE</span>
+                <small>BOXING ANALYTICS</small>
+            </span>
+        </a>
+        <nav class="navigation">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="#analyse">Analysen</a>
+            <a href="#verlauf">Analyseverlauf</a>
+        </nav>
+        <span class="nav-status">
+            <span class="status-dot"></span>
+            FIGHT INTELLIGENCE
+        </span>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="hero">
+        <span class="hero-eyebrow">THE ULTIMATE FIGHT ANALYSIS</span>
+        <h1>DATEN. FAKTEN. <span>SIEGE.</span></h1>
+        <p>
+            Vergleiche zwei Boxer. Analysiere ihre Statistiken.
+            Entdecke die berechneten Siegchancen.
+        </p>
+    </section>
+
+    <section class="fight-section" id="analyse">
+        <div class="section-top">
+            <span class="section-label">FIGHT MATCHUP / 01</span>
+            <span class="section-badge">HEAD TO HEAD</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('home') }}">
+            <div class="fighters">
+
+                <div class="fighter-card red-corner">
+                    <div class="corner-top">
+                        <span class="red-text">RED CORNER</span>
+                        <span>01</span>
+                    </div>
+
+                    <div class="fighter-identity">
+                        <span class="fighter-symbol">A</span>
+                        <div>
+                            <h2>BOXER A</h2>
+                            <small>ROTE ECKE</small>
+                        </div>
+                    </div>
+
+                    <div class="fighter-fields">
+                        <div class="field">
+                            <label for="name_a">Name des Boxers</label>
+                            <input id="name_a" name="name_a"
+                                   type="text" maxlength="120"
+                                   placeholder="z. B. Tyson Fury"
+                                   value="{{ form_values.get('name_a', '') }}"
+                                   required>
+                        </div>
+
+                        <div class="field">
+                            <label for="age_a">Alter</label>
+                            <input id="age_a" name="age_a"
+                                   type="number" min="1" max="120"
+                                   placeholder="Alter"
+                                   value="{{ form_values.get('age_a', '') }}"
+                                   required>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="wins_a">Siege</label>
+                                <input id="wins_a" name="wins_a"
+                                       type="number" min="0"
+                                       value="{{ form_values.get('wins_a', '') }}"
+                                       required>
+                            </div>
+
+                            <div class="field">
+                                <label for="losses_a">Niederlagen</label>
+                                <input id="losses_a" name="losses_a"
+                                       type="number" min="0"
+                                       value="{{ form_values.get('losses_a', '') }}"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="versus-container">
+                    <span class="versus-badge">VS</span>
+                    <small>FIGHT</small>
+                </div>
+
+                <div class="fighter-card blue-corner">
+                    <div class="corner-top">
+                        <span class="blue-text">BLUE CORNER</span>
+                        <span>02</span>
+                    </div>
+
+                    <div class="fighter-identity">
+                        <span class="fighter-symbol">B</span>
+                        <div>
+                            <h2>BOXER B</h2>
+                            <small>BLAUE ECKE</small>
+                        </div>
+                    </div>
+
+                    <div class="fighter-fields">
+                        <div class="field">
+                            <label for="name_b">Name des Boxers</label>
+                            <input id="name_b" name="name_b"
+                                   type="text" maxlength="120"
+                                   placeholder="z. B. Oleksandr Usyk"
+                                   value="{{ form_values.get('name_b', '') }}"
+                                   required>
+                        </div>
+
+                        <div class="field">
+                            <label for="age_b">Alter</label>
+                            <input id="age_b" name="age_b"
+                                   type="number" min="1" max="120"
+                                   placeholder="Alter"
+                                   value="{{ form_values.get('age_b', '') }}"
+                                   required>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="wins_b">Siege</label>
+                                <input id="wins_b" name="wins_b"
+                                       type="number" min="0"
+                                       value="{{ form_values.get('wins_b', '') }}"
+                                       required>
+                            </div>
+
+                            <div class="field">
+                                <label for="losses_b">Niederlagen</label>
+                                <input id="losses_b" name="losses_b"
+                                       type="number" min="0"
+                                       value="{{ form_values.get('losses_b', '') }}"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="action-buttons">
+                <button class="analyze-button" type="submit">
+                    ⚡ KAMPF ANALYSIEREN →
+                </button>
+                <a class="reset-button" href="{{ url_for('home') }}">
+                    ↻ ZURÜCKSETZEN
+                </a>
+            </div>
+        </form>
+    </section>
+
+    {% if result %}
+    <section class="prediction-section" id="prediction">
+        <div class="prediction-heading">
+            <span class="section-label">FIGHT INTELLIGENCE / 02</span>
+            <h2>FIGHT PREDICTION</h2>
+            <p>Berechnete Siegwahrscheinlichkeit</p>
+        </div>
+
+        <div class="arena-matchup">
+
+            {% for side in ['a', 'b'] %}
+            {% set fighter_name = result.name_a if side == 'a' else result.name_b %}
+            {% set probability = result.probability_a if side == 'a' else result.probability_b %}
+            {% set gallery = galleries[side] %}
+            {% set selected = gallery.selected %}
+            {% set photo = gallery.photos[selected] if gallery.photos else none %}
+
+            <div class="arena-fighter {{ 'arena-red' if side == 'a' else 'arena-blue' }}"
+                 id="arena-{{ side }}"
+                 data-name="{{ fighter_name }}"
+                 data-photos='{{ gallery.photos | tojson | forceescape }}'
+                 data-index="{{ selected }}">
+
+                <div class="arena-photo"
+                     {% if photo %}
+                     style="background-image: url('{{ photo.url }}')"
+                     {% endif %}>
+                </div>
+
+                <div class="arena-colorwash"></div>
+                <div class="arena-grain"></div>
+
+                <div class="arena-corner">
+                    {{ 'RED CORNER' if side == 'a' else 'BLUE CORNER' }}
+                </div>
+
+                <div class="arena-content">
+                    <span class="arena-tag">
+                        {{ 'FIGHTER 01' if side == 'a' else 'FIGHTER 02' }}
+                    </span>
+                    <h3>{{ fighter_name }}</h3>
+                    <div class="arena-percentage">
+                        {{ probability }}<span>%</span>
+                    </div>
+                    <small>SIEGWAHRSCHEINLICHKEIT</small>
+                </div>
+
+                <div class="photo-controls">
+                    <div class="photo-switcher">
+                        <button type="button"
+                                class="photo-arrow prev"
+                                aria-label="Vorheriges Foto">‹</button>
+
+                        <span class="photo-counter">
+                            {{ selected + 1 if gallery.photos else 0 }}
+                            / {{ gallery.photos | length }}
+                        </span>
+
+                        <button type="button"
+                                class="photo-arrow next"
+                                aria-label="Nächstes Foto">›</button>
+                    </div>
+
+                    <button type="button"
+                            class="save-photo"
+                            {% if not gallery.photos %}disabled{% endif %}>
+                        Foto speichern
+                    </button>
+
+                    <span class="photo-status" role="status">
+                        {% if not gallery.photos %}
+                            Kein passendes Foto gefunden
+                        {% else %}
+                            Foto auswählen
+                        {% endif %}
+                    </span>
+
+                    <a class="photo-credit"
+                       {% if photo %}
+                       href="{{ photo.source }}"
+                       {% else %}
+                       hidden
+                       {% endif %}
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        Bildquelle / Lizenz ↗
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="arena-vs">VS</div>
+        </div>
+
+        <div class="refresh-grid">
+            {% for side in ['a', 'b'] %}
+            <form method="POST"
+                  action="{{ url_for('refresh_photos') }}">
+                <input type="hidden" name="name"
+                       value="{{ result.name_a if side == 'a' else result.name_b }}">
+                <input type="hidden" name="analysis_id"
+                       value="{{ analysis_id }}">
+                <button type="submit" class="refresh-photos">
+                    ↻ Neue Bildvorschläge für Boxer {{ side | upper }}
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+
+        {% set pa = result.probability_a | float %}
+        {% set pb = result.probability_b | float %}
+        {% set total = pa + pb %}
+
+        <div class="prediction-bars">
+            <div class="prediction-bar red-bar">
+                <div class="bar-fill"
+                     style="width: {{ pa / total * 100 if total > 0 else 50 }}%">
+                </div>
+            </div>
+            <div class="prediction-bar blue-bar">
+                <div class="bar-fill"
+                     style="width: {{ pb / total * 100 if total > 0 else 50 }}%">
+                </div>
+            </div>
+        </div>
+
+        <div class="prediction-bottom">
+            <span>◉ STATISTISCHE PROGNOSE</span>
+            <span>FIGHTBASE ANALYTICS</span>
+        </div>
+
+        <p class="prediction-disclaimer">
+            Die Prognose ist keine Garantie für den Kampfausgang.
+            Bildvorschläge von Wikimedia Commons können auch Aufnahmen
+            außerhalb des Boxrings enthalten. Lizenzangaben bitte
+            über die jeweilige Bildquelle prüfen.
+        </p>
+    </section>
+    {% endif %}
+
+    <section class="history-section" id="verlauf">
+        <div class="history-heading">
+            <div>
+                <span class="section-label">FIGHT ARCHIVE / 03</span>
+                <h2>◷ ANALYSEVERLAUF</h2>
+                <p>Deine bisherigen Kampfanalysen</p>
+            </div>
+
+            {% if history %}
+            <form method="POST"
+                  action="{{ url_for('clear_history') }}"
+                  onsubmit="return confirm('Alle Analysen wirklich löschen?')">
+                <button class="clear-button" type="submit">
+                    Alle Analysen löschen
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        {% if history %}
+        <div class="history-grid">
+            {% for item in history %}
+            <article class="history-card">
+                <div class="history-card-top">
+                    <span>FIGHT #{{ item.id }}</span>
+                    <span>{{ item.created_at }}</span>
+                </div>
+
+                <div class="history-matchup">
+                    <div class="history-boxer">
+                        <span class="red-text">RED CORNER</span>
+                        <h3>{{ item.name_a }}</h3>
+                        <strong class="red-text">
+                            {{ item.probability_a }}%
+                        </strong>
+                        <small>
+                            {{ item.wins_a }}W /
+                            {{ item.losses_a }}L
+                        </small>
+                    </div>
+
+                    <span class="history-versus">VS</span>
+
+                    <div class="history-boxer history-boxer-right">
+                        <span class="blue-text">BLUE CORNER</span>
+                        <h3>{{ item.name_b }}</h3>
+                        <strong class="blue-text">
+                            {{ item.probability_b }}%
+                        </strong>
+                        <small>
+                            {{ item.wins_b }}W /
+                            {{ item.losses_b }}L
+                        </small>
+                    </div>
+                </div>
+
+                {% set ha = item.probability_a | float %}
+                {% set hb = item.probability_b | float %}
+                {% set ht = ha + hb %}
+
+                <div class="history-meter">
+                    <div class="meter-red"
+                         style="width: {{ ha / ht * 100 if ht > 0 else 50 }}%">
+                    </div>
+                    <div class="meter-blue"
+                         style="width: {{ hb / ht * 100 if ht > 0 else 50 }}%">
+                    </div>
+                </div>
+
+                <div class="history-actions">
+                    <a class="view-button"
+                       href="{{ url_for('home', load=item.id) }}#prediction">
+                        Analyse ansehen
+                    </a>
+
+                    <form method="POST"
+                          action="{{ url_for('delete_analysis', analysis_id=item.id) }}"
+                          onsubmit="return confirm('Analyse löschen?')">
+                        <button type="submit" class="delete-button">
+                            Löschen
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-history">
+            <div class="empty-symbol">🥊</div>
+            <h3>NO FIGHTS YET</h3>
+            <p>Starte deinen ersten Kampfvergleich.</p>
+        </div>
+        {% endif %}
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="footer-logo">FIGHT<span>BASE</span></div>
+    <p>BOXING ANALYTICS · FIGHT INTELLIGENCE</p>
+</footer>
+
+<script>
+document.querySelectorAll(".arena-fighter").forEach((card) => {
+    const photos = JSON.parse(card.dataset.photos || "[]");
+    let index = Number(card.dataset.index || 0);
+
+    const photoLayer = card.querySelector(".arena-photo");
+    const counter = card.querySelector(".photo-counter");
+    const source = card.querySelector(".photo-credit");
+    const status = card.querySelector(".photo-status");
+    const saveButton = card.querySelector(".save-photo");
+
+    function displayPhoto() {
+        if (!photos.length) {
+            photoLayer.style.backgroundImage = "none";
+            counter.textContent = "0 / 0";
+            source.hidden = true;
+            saveButton.disabled = true;
+            return;
+        }
+
+        const photo = photos[index];
+        photoLayer.style.backgroundImage =
+            'url("' + photo.url.replaceAll('"', "%22") + '")';
+
+        counter.textContent = `${index + 1} / ${photos.length}`;
+        source.href = photo.source;
+        source.hidden = false;
+        saveButton.disabled = false;
+    }
+
+    function changePhoto(direction) {
+        if (!photos.length) return;
+
+        index = (index + direction + photos.length) % photos.length;
+        displayPhoto();
+        status.textContent = "Nicht gespeichert";
+        status.classList.remove("saved");
+    }
+
+    card.querySelector(".prev").addEventListener("click", () => {
+        changePhoto(-1);
+    });
+
+    card.querySelector(".next").addEventListener("click", () => {
+        changePhoto(1);
+    });
+
+    saveButton.addEventListener("click", async () => {
+        if (!photos.length) return;
+
+        saveButton.disabled = true;
+        status.textContent = "Speichere ...";
+
+        try {
+            const response = await fetch(
+                "{{ url_for('select_photo') }}",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        name: card.dataset.name,
+                        index: index
+                    })
+                }
+            );
+
+            if (!response.ok) throw new Error("Speichern fehlgeschlagen");
+
+            status.textContent = "✓ Foto gespeichert";
+            status.classList.add("saved");
+        } catch (error) {
+            status.textContent = "Fehler beim Speichern";
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+
+    displayPhoto();
+});
+</script>
+
+</body>
+</html>
