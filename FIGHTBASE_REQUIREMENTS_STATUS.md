@@ -1,29 +1,34 @@
-# Fightbase: Requirement-Check (08.10.2026)
+# Fightbase Gesamtprüfung – 8. Oktober 2026
 
-Dieser Stand trennt **belegte Fakten** von **fehlenden Daten**.
+## Korrigiert
 
-## Lieferumfang
-- 8 angekündigte echte Kämpfe mit beiden Boxern, Datum, Veranstaltungsbeginn in Ortszeit, Arena, Quelle und Prüfdatum 08.10.2026. Termine können sich ändern; kein Echtzeit-Abgleich aus einer vollständig kostenlosen API.
-- Übernommene, belegte Bilanzen bei sechs aktiven Boxern: Schofield, Bahdi, Dubois, Wardley, Fury und Joshua. Andere Karrierebilanzen werden **nicht erfunden**.
-- Historische echte Boxkämpfe und Ergebnisse aus Open Boxing mit KO/TKO/Entscheidung soweit im Archiv vorhanden.
-- Nur genau **ein** per Wikidata-Entity (exakter Name + Boxerberuf + P18) zugeordnetes Wikimedia-Foto. Bei fehlender/uneindeutiger Quelle wird absichtlich kein Foto angezeigt. Fotos müssen nicht neu sein. Alte unüberprüfte Fotoauswahlen werden nicht genutzt.
-- WBA/WBC/IBF/WBO: Informationen und Verlinkung auf offizielle Titel- und Ranglistenseiten. Ohne Live-Daten werden keine aktuellen Titelträger behauptet.
-- Suchfelder für Boxer, Kämpfe und Organisationen.
-- Drei-Ausgänge-Demomodell für kommende Kämpfe mit Bilanz: Sieg A + Unentschieden + Sieg B = 100 %; drei geteilte Balken; heuristisch, keine kalibrierten Quoten.
+- **Termine:** Uhrzeiten mit offiziellen Arena-/Veranstalterangaben abgeglichen. Schofield–Bahdi 15:15 Uhr Chicago-Ortszeit, Fundora-Veranstaltung erster Kampf 14:00 Uhr Las-Vegas-Ortszeit, Fury–Joshua Veranstaltungsbeginn 17:00 Uhr Cardiff-Ortszeit. Bei fehlender zuverlässiger Uhrzeit bleibt sie ausdrücklich offen. Nicht mit der exakten Ringwalk-Zeit verwechseln.
+- **Boxerbilanzen:** 16 zu den acht angekündigten Hauptkämpfen gehörende Boxer mit datierten W-L-D-KO-Zahlen und individueller Quellenadresse. Andere historische Boxer bleiben bei unvollständiger Bilanz als unbekannt gekennzeichnet.
+- **Kampfergebnisse:** Sieger, Kampfausgang und ggf. Runde aus dem historischen Archiv werden in Übersicht und Details gezeigt.
+- **Events:** Bestätigte Kampfankündigungen werden mit konsistenter Event-ID in der Eventübersicht gespeichert.
+- **Fotos:** Nur ein Bild je eindeutig identifizierter Wikidata-Boxerperson; P18, Berufsangabe und exakter Name müssen zusammenpassen. Alte unzuverlässige Commons-Suchen auch in der Vergleichsseite abgeschaltet. Asynchrones Nachladen und Caching. Bildqualität oder aktuelles Aufnahmejahr nicht garantiert.
+- **Prognosen:** Drei Ergebnisse (Sieg A / Unentschieden / Sieg B = 100 %) plus Balkendiagramm bei kommenden Kämpfen mit beiden W/L-Daten; eindeutig heuristische Demo, nicht kalibrierte tatsächliche Gewinnwahrscheinlichkeit.
+- **Performance:** Lokale HTML-Antworten und Foto-API werden über Tests überprüft. Foto-Anfragen blockieren den Seitenaufruf nicht mehr. Eine Garantie für drei Sekunden inklusive externen Bildern kann ohne reale Browsertests nicht abgegeben werden.
+- **Oberfläche:** Bereits zuvor verbesserte Schriftgrößen sowie zusätzlicher Bildfokus und passende Platzhalter.
 
-## Noch nicht vollständig erfüllt
-- REQ-F-001/003/004/005: Weltweit vollständiger aktueller Kampfplan, alle Boxer mit Nationalität/Alter/Bilanz/Organisation und täglich aktualisierte Weltmeisterlisten. Für diese Vollständigkeit fehlt ein verlässlicher frei verwendbarer Live-Feed.
-- REQ-NF-004: Eine Ladezeit <= 3 Sekunden für **alle** Daten wurde noch nicht mit realen Netzbedingungen nachgemessen. HTML kommt lokal aus SQLite, Fotos werden erst nachträglich geladen. Beim ersten Start braucht der Import Zeit.
-- REQ-F-007: Das Demo-Modell ist noch keine objektiv auf realen historischen Kämpfen trainierte Prognose.
+## Stand je Requirement
+| Anforderung | Stand |
+| --- | --- |
+| REQ-F-001 Kommende Kämpfe | Teilweise; acht datierte Paarungen, keine weltweite Live-Vollständigkeit |
+| REQ-F-002 Ergebnisse | Historisches Archiv, Sieger/Ausgang soweit vorhanden; jüngste Ergebnisse nicht vollständig |
+| REQ-F-003 Name/Nationalität/Alter/Organisation | Teilweise; Verfügbarkeit abhängig von Quelle |
+| REQ-F-004 W/L/D/KO | 16 geprüfte Datensätze; übrige Boxer teils ohne Karrierebilanz |
+| REQ-F-005 Boxorganisationen/Titel | Verbandsinformationen und offizielle Titel-Links, keine aktuelle komplette Titelträger-Datenbank |
+| REQ-F-006 Suchfunktion | Im vorhandenen Datenbestand für Kämpfer, Kämpfe und Organisationen |
+| REQ-F-007 Drei Prognosen | In Kampfdetails, wenn Daten vorhanden; alte manuelle Vergleiche weiter mit zwei Ausgängen |
+| REQ-F-008 Balkendiagramm | In neuen Kampfdetails mit Daten |
+| REQ-NF-001–003 Darstellung | Design vorhanden; Browser-Sichtprüfung noch notwendig |
+| REQ-NF-004 3 Sekunden | Lokal per automatischen Routentests geprüft; echte Internet-Performance noch nicht bewiesen |
 
-## Referenzen
-Kalender:
-- https://fightnights.com/Floyd-Schofield-vs-Lucas-Bahdi-WBA-Lightweight-Title-Fight-3880
-- https://www.fightnights.com/Daniel-Dubois-vs-Fabio-Wardley-II-WBO-World-Heavyweight-Title-3883
-- https://www.fightnights.com/Tyson-Fury-vs-Anthony-Joshua-3890
+## Herkunft
+- Open Boxing Archiv (MIT): https://github.com/edhwright/open-boxing
+- Kostenlose TheSportsDB-API: https://www.thesportsdb.com/
+- Boxerprofile und datierte Ankündigungen: URLs in boxing-app/verified_fights.py
+- Personenbilder: Wikidata und Wikimedia Commons; Urheber/Lizenz sind pro Datei zu prüfen.
 
-Boxer-Statistiken: in boxing-app/verified_fights.py hinterlegt.
-
-Bilder: https://www.wikidata.org/ und https://commons.wikimedia.org/wiki/Main_Page. Lizenz ist für jede Datei individuell zu prüfen; Bildjahr nicht garantiert.
-
-Organisationen: https://www.wbaboxing.com/wba-ranking · https://wbcboxing.com/en/ · https://www.ibf-usba-boxing.com/ · https://wboboxing.com/rankings/
+Die Seite ist weiterhin keine vollständig aktuelle FotMob-Alternative. Es gibt weder einen umfassenden kostenlosen Weltkampfdatenfeed noch vollständige Statistiken und aktuelle freigabefähige Boxerfotos für sämtliche Boxer.
