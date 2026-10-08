@@ -189,11 +189,19 @@ def import_fighter(item,*,save_cache=True):
 def reapply_saved_profiles():
     """Curated seed data is loaded at every boot: keep newer cached API values."""
     initialize()
-    for row in feed.rows("SELECT payload FROM rapid_fighter_cache"):
+    for row in feed.rows("SELECT fighter_id,payload,imported_at FROM rapid_fighter_cache"):
         try:
             item=json.loads(row["payload"])
             if isinstance(item,dict):
                 feed.save_fighter(item)
+                with feed.connect() as db:
+                    db.execute("""INSERT INTO hub_sources(entity_id,source_url,reviewed_on,source_kind)
+                        VALUES(?,?,?,'rapidapi-profile')
+                        ON CONFLICT(entity_id) DO UPDATE SET
+                        source_url=excluded.source_url,reviewed_on=excluded.reviewed_on,
+                        source_kind=excluded.source_kind""",
+                        (row["fighter_id"],"https://boxing-data.com/docs/endpoints/fighters/",
+                         row["imported_at"][:10]))
         except (ValueError,TypeError):
             continue
 
