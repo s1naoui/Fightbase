@@ -117,6 +117,13 @@ class AdminTests(unittest.TestCase):
              "draws":"1","ko_wins":"4","source_url":"javascript:alert(1)"})
         self.assertEqual(bad.status_code,302)
         self.assertEqual(feed.one("SELECT wins FROM hub_fighters WHERE id=?",(self.fid,))["wins"],37)
+        reset=self.client.post("/admin/boxer/"+self.fid+"/bilanz/zuruecksetzen",
+                    data={"csrf_token":self.csrf()})
+        self.assertEqual(reset.status_code,302)
+        record=feed.one("SELECT wins,losses,ko_wins FROM hub_fighters WHERE id=?",(self.fid,))
+        self.assertEqual((record["wins"],record["losses"],record["ko_wins"]),(36,2,25))
+        self.assertIsNone(feed.one("SELECT * FROM hub_admin_records WHERE fighter_id=?",
+                                    (self.fid,)))
 
     def test_knockout_stats_affect_three_way_rating(self):
         from prediction import calculate_three_way
