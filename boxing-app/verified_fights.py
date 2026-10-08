@@ -7,6 +7,16 @@ from datetime import date
 
 AS_OF = "2026-10-08"
 RECORDS = [
+ ("Osleys Iglesias",15,0,0,14,None,"Cuba","Super Middleweight","https://www.ringmagazine.com/news/VxAqTbFGKirVrSQgmiY6K"),
+ ("Oliver Zaren",19,0,1,8,None,"Denmark","Super Middleweight","https://www.ringmagazine.com/news/VxAqTbFGKirVrSQgmiY6K"),
+ ("Sebastian Fundora",24,1,1,16,None,"United States","Super Welterweight","https://origin.premierboxingchampions.com/sebastian-fundora"),
+ ("Ermal Hadribeaj",22,0,1,8,"1993-10-11","United States","Super Welterweight","https://www.ringmagazine.com/fighters/ermal-hadribeaj-70SNbkWZvHnLYdyr7ZQktd"),
+ ("Dalton Smith",19,0,0,14,None,"United Kingdom","Super Lightweight","https://wbcboxing.com/en/where-to-watch-smith-vs-puello/"),
+ ("Alberto Puello",25,1,0,11,"1994-07-22","Dominican Republic","Super Lightweight","https://wbcboxing.com/en/where-to-watch-smith-vs-puello/"),
+ ("Emanuel Navarrete",40,2,1,33,None,"Mexico","Super Featherweight","https://champinon.info/de/schedule/navarrete-vs-foster/"),
+ ("O'Shaquie Foster",25,3,0,12,"1993-09-17","United States","Super Featherweight","https://www.boxingschedule.info/fighters/oshaquie-foster"),
+ ("Elif Nur Turhan",14,0,0,8,None,"Türkiye","Lightweight","https://champinon.info/de/boxing/elif-nur-turhan/"),
+ ("Alycia Baumgardner",18,1,0,7,None,"United States","Lightweight","https://www.ringmagazine.com/events/turhan-vs-baumgardner-6X6oyTmwE55wWOWk5nU5f4"),
  ("Floyd Schofield",19,0,0,13,"2002-08-27","USA","Lightweight","https://fightnights.com/boxers/Floyd-Schofield-record-5856"),
  ("Lucas Bahdi",20,0,0,15,"1994-01-27","Canada","Lightweight","https://www.fightnights.com/boxers/Lucas-Bahdi-record-6090"),
  ("Daniel Dubois",23,3,0,22,"1997-09-06","United Kingdom","Heavyweight","https://fightnights.com/boxers/Daniel-Dubois-record-5280"),
@@ -49,7 +59,7 @@ def fighter_key(name):
 
 
 def seed_verified():
-    """Upsert reviewed data without modifying past analyses or archive results."""
+    """Upsert a dated, sourced record snapshot; do not infer incomplete career histories."""
     from boxing_feed import connect
     with connect() as db:
         db.execute("""CREATE TABLE IF NOT EXISTS hub_sources (
