@@ -100,8 +100,11 @@ def fighter(fighter_id):
     matches=feed.rows("""SELECT * FROM hub_fights WHERE a_id=? OR b_id=?
       ORDER BY fight_date DESC LIMIT 35""",(fighter_id,fighter_id))
     reference=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",(fighter_id,))
+    from fightbase_admin import get_manual_record
+    manual_record=get_manual_record(fighter_id)
     return render_template("hub_fighter.html",page="fighter",status=feed.status(),
-       fighter=person,matches=matches,reference=reference)
+       fighter=person,matches=matches,reference=reference,
+       manual_record=manual_record)
 
 @bp.route("/api/foto/<fighter_id>")
 def photo(fighter_id):
