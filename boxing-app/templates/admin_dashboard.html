@@ -27,7 +27,7 @@
     <div><div class="eyebrow">{{ fighter.division or "BOXING" }}</div><h2>{{ fighter.name }}</h2><small>Profil-ID: {{ fighter.id }}</small></div>
     <a class="admin-profile-link" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}" target="_blank" rel="noopener noreferrer">Profil ↗</a>
   </div>
-  <div class="admin-preview" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}">
+  <div class="admin-preview" data-admin-preview-id="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}">
     {% if existing %}
       <img src="{{ url_for('admin.photo',fighter_id=fighter.id,v=existing.updated_at) }}" loading="lazy" alt="Eigenes Foto von {{ fighter.name }}">
     {% else %}
@@ -80,9 +80,9 @@
 {% block scripts %}
 <script>
 // Existing manual photo previews are already attached; no duplicate network image.
-document.querySelectorAll(".admin-preview[data-fighter-photo]").forEach(box=>{
+document.querySelectorAll(".admin-preview[data-admin-preview-id]").forEach(box=>{
  if(box.querySelector("img"))return;
- const id=box.dataset.fighterPhoto;
+ const id=box.dataset.adminPreviewId;
  fetch({{ url_for('hub.dashboard')|tojson }}+"api/foto/"+encodeURIComponent(id))
  .then(r=>r.json()).then(data=>{
   if(!data.url)return;

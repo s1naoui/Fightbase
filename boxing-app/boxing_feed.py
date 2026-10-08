@@ -68,6 +68,8 @@ def init_feed():
     load_bundled_archive()
     from verified_fights import seed_verified
     seed_verified()
+    from fightbase_admin import apply_manual_records
+    apply_manual_records()
 
 def meta(key, default=""):
     with connect() as c:

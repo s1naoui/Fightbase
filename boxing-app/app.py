@@ -208,6 +208,15 @@ def verified_comparison_photo():
         return jsonify({"error":"Ungültiger Boxername"}),400
     canonical=canonical_name(name)
     key="legacy-"+get_key(canonical)
+    from fightbase_admin import get_photo
+    from boxing_feed import one
+    person=one("""SELECT id FROM hub_fighters WHERE lower(name)=lower(?)
+        ORDER BY CASE WHEN id LIKE 'reviewed-%' THEN 0 ELSE 1 END,id LIMIT 1""",
+        (canonical,))
+    if person:
+        uploaded=get_photo(person["id"])
+        if uploaded:
+            return jsonify(uploaded)
     return jsonify(quick_verified_photo(key,canonical))
 
 
@@ -385,6 +394,8 @@ def clear_history():
 init_db()
 from portal import register_hub
 register_hub(app)
+from fightbase_admin import init_admin
+init_admin(app)
 
 if __name__ == "__main__":
     import os

@@ -139,3 +139,140 @@ footer { font-size: 14px; line-height: 1.65; }
 .missing-photo[hidden]{display:none!important}
 .fighter-photo img{transition:transform .28s ease}
 .fighter-card:hover .fighter-photo img{transform:scale(1.04)}
+
+
+/* ===== FIGHTBASE NAVIGATION – larger, game-style individual hover ===== */
+.topbar { background:#090f1c; box-shadow:0 2px 28px #0006; }
+.top-inner { max-width:1440px; min-height:105px; padding:14px 24px; gap:22px; }
+.brand { font-size:39px; }
+.brand small { font-size:11px; }
+.topbar nav { gap:7px; align-items:center; }
+.topbar nav a {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:56px; padding:15px 19px; border:1px solid transparent;
+  border-radius:12px; font-size:16px; font-weight:800;
+  color:#d2e1f7; white-space:nowrap; line-height:1.15;
+  background:transparent; position:relative; z-index:1;
+  transform:scale(1); transform-origin:center;
+  transition:transform .18s ease,background .18s ease,
+             box-shadow .18s ease,color .18s ease,border-color .18s ease;
+}
+.topbar nav a:hover,.topbar nav a:focus-visible {
+  transform:translateY(-3px) scale(1.12); z-index:3;
+  background:linear-gradient(135deg,#ab223c,#ec3c57);
+  box-shadow:0 10px 26px #ff3e5660,0 1px 10px #0b183f;
+  border-color:#ff8998; color:white;
+}
+.topbar nav a[aria-current="page"] {
+  background:#23354d; border-color:#446b94; color:white;
+}
+.topbar nav a[aria-current="page"]:hover {
+  background:linear-gradient(135deg,#ab223c,#ec3c57); border-color:#ff8998;
+}
+.compare-link {
+  padding:16px 22px; font-size:16px; min-height:54px;
+  border-radius:11px; transition:transform .18s ease,
+  background .18s ease,box-shadow .18s ease;
+}
+.compare-link:hover,.compare-link:focus-visible {
+  transform:translateY(-2px) scale(1.1);
+  background:#355a84; box-shadow:0 10px 24px #3b89ff40;
+}
+@media(max-width:1320px){
+  .top-inner{flex-wrap:wrap; justify-content:space-between; min-height:98px;}
+  .topbar nav{order:3;flex:1 1 100%;justify-content:center;padding-bottom:8px;}
+}
+@media(max-width:670px){
+  .top-inner{padding:12px 14px;gap:10px;}
+  .brand{font-size:32px;}
+  .topbar nav{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;gap:5px;}
+  .topbar nav a{padding:12px 15px;min-height:48px;font-size:15px;flex:none;}
+  .topbar nav a:hover,.topbar nav a:focus-visible{
+    transform:translateY(-2px) scale(1.05);
+  }
+  .compare-link{font-size:14px;min-height:46px;padding:12px 14px;}
+}
+@media(prefers-reduced-motion:reduce){
+ .topbar nav a,.compare-link{transition:none!important}
+ .topbar nav a:hover,.compare-link:hover{transform:none}
+}
+
+/* ===== ADMIN / local image management ===== */
+.admin-wrap{max-width:780px;margin:30px auto 90px;}
+.admin-title{font-style:italic;font-size:clamp(48px,6vw,78px);font-weight:900;
+  line-height:1.08;margin:12px 0 16px}
+.admin-title em{color:var(--red);font-style:italic}
+.admin-intro,.admin-intro-header p{font-size:16px;color:#b8cce6;line-height:1.75}
+.admin-panel{border-radius:17px;background:linear-gradient(135deg,#1e2940,#111a2d);
+ border:1px solid #465777;padding:35px;margin-top:30px;box-shadow:0 18px 60px #0005}
+.admin-panel h2{font-size:32px;margin:0 0 10px}
+.admin-panel p{line-height:1.75;color:#c7d3e3}
+.admin-panel pre{overflow-x:auto;border:1px solid #52627b;border-radius:10px;
+ background:#080e1b;padding:20px;font-size:13px;line-height:1.65;color:#f5f7ff}
+.admin-panel code,.admin-help code{color:#93bfff}
+.admin-login{display:flex;flex-direction:column;gap:16px}
+.admin-login label{font-weight:800}
+.admin-login input{font-size:17px;padding:16px 19px;background:#090f1c;
+ border:1px solid #506381;border-radius:10px;color:white}
+.admin-login .cta{align-self:start;margin:0}
+.admin-intro-header{display:flex;align-items:center;justify-content:space-between;
+ gap:22px;margin:18px 0 25px}
+.admin-intro-header h1{margin-bottom:0}
+.admin-outline,.admin-danger{background:#192943;border:1px solid #5c7698;
+ color:#e2edff;padding:12px 17px;border-radius:9px;font-weight:700;
+ cursor:pointer;font-size:14px}
+.admin-danger{border-color:#a64b63;color:#ffc4ce;background:#39172650;
+ margin-top:12px}
+.admin-danger:hover{background:#632338}
+.admin-help{background:linear-gradient(120deg,#122c3a,#18243a);
+ border:1px solid #3c687d;border-radius:12px;padding:20px 24px;margin-bottom:18px}
+.admin-help strong{font-size:16px;color:#9cdefb}
+.admin-help p{font-size:14px;color:#bacde1;line-height:1.7;margin:8px 0 0}
+.admin-alert{padding:14px 19px;border-radius:10px;margin:10px 0;font-size:15px}
+.admin-success{background:#17492f;border:1px solid #439a6a;color:#d3ffe1}
+.admin-error{background:#59222f;border:1px solid #b84e64;color:#ffe2e7}
+.admin-search{margin:24px 0 10px}
+.admin-fighter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:22px;margin:22px 0 80px}
+.admin-fighter{border:1px solid #445873;border-radius:15px;
+ background:linear-gradient(135deg,#1c293d,#111a2a);padding:22px;min-width:0;
+ overflow:hidden}
+.admin-fighter-head{display:flex;align-items:flex-start;
+ justify-content:space-between;gap:8px;margin-bottom:16px}
+.admin-fighter-head h2{font-size:34px;font-weight:900;margin:6px 0}
+.admin-fighter-head small{display:block;color:#8fa4bf;font-size:11px;
+ overflow-wrap:anywhere}
+.admin-profile-link{flex:none;padding:8px 12px;background:#263a58;
+ border:1px solid #547094;border-radius:7px;font-size:12px}
+.admin-preview{height:270px;position:relative;display:grid;place-items:center;
+ overflow:hidden;background:radial-gradient(ellipse at center,#314669,#0a1425);
+ border:1px solid #41526b;border-radius:13px}
+.admin-preview img{position:absolute;inset:0;width:100%;height:100%;
+ object-fit:cover;object-position:center 20%;display:block}
+.admin-label-row{display:flex;justify-content:space-between;flex-wrap:wrap;
+ align-items:center;gap:8px;margin:19px 0 12px}
+.admin-label-row strong{font-size:17px}
+.admin-label-row span{font-size:11px;color:#8bd1f9;letter-spacing:.5px}
+.admin-form{display:flex;flex-direction:column;gap:13px}
+.admin-form label{display:flex;flex-direction:column;gap:7px;font-size:13px;
+ font-weight:700;color:#e3edff}
+.admin-form label small{color:#a4b4c9;font-size:12px;font-weight:500}
+.admin-form input{color:#f2f7ff;background:#0c1425;border:1px solid #475c7b;
+ border-radius:8px;padding:11px 12px;font-size:14px;min-width:0}
+.admin-form input[type=file]{font-size:12px;max-width:100%}
+.admin-form input::file-selector-button{background:#344f75;border:0;
+ border-radius:6px;color:white;padding:8px;margin-right:12px;cursor:pointer}
+.admin-primary{border:1px solid #ff6474;background:linear-gradient(130deg,#ff5065,#bd1e3c);
+ color:white;border-radius:9px;font-size:13px;font-weight:800;
+ padding:14px 17px;cursor:pointer}
+.admin-primary:hover{filter:brightness(1.12)}
+.admin-records{border-top:1px solid #435472;padding-top:14px;margin-top:20px}
+.admin-records summary{font-size:15px;font-weight:800;cursor:pointer}
+.admin-records summary span{float:right;color:#b8c9de;font-size:13px}
+.admin-records[open] summary{margin-bottom:15px}
+.admin-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:760px){
+ .admin-fighter-grid{grid-template-columns:1fr}
+ .admin-intro-header{align-items:start;flex-direction:column}
+ .admin-panel{padding:22px}
+}

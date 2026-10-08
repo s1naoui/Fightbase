@@ -111,6 +111,10 @@ def photo(fighter_id):
     if not person:
         abort(404)
     from identity_photos import quick_verified_photo
+    from fightbase_admin import get_photo
+    uploaded=get_photo(fighter_id)
+    if uploaded:
+        return jsonify(uploaded)
     return jsonify(quick_verified_photo(fighter_id,person["name"]))
 
 @bp.route("/api/status")
