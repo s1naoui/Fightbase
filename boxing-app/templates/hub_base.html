@@ -8,11 +8,11 @@
 <a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a></div></header>
 <main class="container">
 {% if not status.configured %}
-<div class="notice">API noch nicht verbunden. Lege <code>boxing-app/.env</code> an und trage <code>BOXING_API_KEY</code> ein. Bis dahin werden keine Kämpfe erfunden.</div>
+<div class="notice">Kostenloser Datenfeed vorübergehend nicht verfügbar.</div>
 {% elif status.error %}<div class="notice">API-Problem: {{ status.error }}. Bereits synchronisierte Einträge bleiben sichtbar.</div>{% endif %}
-{% block main %}{% endblock %}
+<p class="free-note">{{ status.note or "Kostenlose Datenquellen sind möglicherweise unvollständig." }}</p>{% block main %}{% endblock %}
 </main>
-<footer><strong>FIGHT<span>BASE</span></strong><p>Quelle: Boxing Data API · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
+<footer><strong>FIGHT<span>BASE</span></strong><p>Quelle: TheSportsDB (kostenlos) · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
 <script>
 document.querySelectorAll("[data-fighter-photo]").forEach(function(box){
  const id=box.dataset.fighterPhoto; if(!id)return;
