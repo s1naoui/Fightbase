@@ -7,14 +7,18 @@
 <div class="hero-vs" aria-hidden="true">VS</div></section>
 <div class="metrics"><div><strong>{{ upcoming|length }}</strong>Kämpfe in der Auswahl</div><div><strong>{{ archive_count }}</strong>Historische Kämpfe</div><div><strong>{{ fighters_count }}</strong>Erfasste Boxer</div><div><strong>{{ events|length }}</strong>Events</div></div>
 <section class="content-panel">
-<div class="section-top"><div><div class="eyebrow">FIGHT CENTER</div><h2>{{ {'upcoming':'KOMMENDE KÄMPFE','results':'HISTORISCHE ERGEBNISSE','fighters':'BOXER-VERZEICHNIS','events':'VERANSTALTUNGEN','rankings':'WELTRANGLISTEN'}[tab] }}</h2></div>
+<div class="section-top"><div><div class="eyebrow">FIGHT CENTER</div><h2>{{ {'upcoming':'KOMMENDE KÄMPFE','results':'HISTORISCHE ERGEBNISSE','fighters':'BOXER-VERZEICHNIS','events':'VERANSTALTUNGEN','rankings':'WELTRANGLISTEN','organizations':'BOXORGANISATIONEN'}[tab] }}</h2></div>
 <div class="feed-status">{{ '⏳ Synchronisiere ...' if status.syncing else ('● Automatisch synchronisiert' if status.last_success else '○ Daten werden erwartet') }}</div></div>
-<div class="tabs"><a class="{{ 'active' if tab=='upcoming' else '' }}" href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kommende Kämpfe</a><a class="{{ 'active' if tab=='results' else '' }}" href="{{ url_for('hub.dashboard',tab='results') }}">Historische Ergebnisse</a><a class="{{ 'active' if tab=='fighters' else '' }}" href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a class="{{ 'active' if tab=='events' else '' }}" href="{{ url_for('hub.dashboard',tab='events') }}">Events</a><a class="{{ 'active' if tab=='rankings' else '' }}" href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a></div>
+<div class="tabs"><a class="{{ 'active' if tab=='upcoming' else '' }}" href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kommende Kämpfe</a><a class="{{ 'active' if tab=='results' else '' }}" href="{{ url_for('hub.dashboard',tab='results') }}">Historische Ergebnisse</a><a class="{{ 'active' if tab=='fighters' else '' }}" href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a class="{{ 'active' if tab=='events' else '' }}" href="{{ url_for('hub.dashboard',tab='events') }}">Events</a><a class="{{ 'active' if tab=='rankings' else '' }}" href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a><a class="{{ 'active' if tab=='organizations' else '' }}" href="{{ url_for('hub.dashboard',tab='organizations') }}">Organisationen</a></div>
 {% if tab=='results' %}
 <p class="hint">Archivdaten von Open Boxing (vorwiegend historische Titelkämpfe, zuletzt bis 2023). Keine Live-Ergebnisse und keine vollständigen Karrierebilanzen. <a href="https://openboxing.org/api/" target="_blank" rel="noopener noreferrer">Quelle ansehen ↗</a></p>
 {% endif %}
 {% if tab in ('upcoming','results') %}
 {% set fights=upcoming if tab=='upcoming' else results %}
+<form class="search" action="{{ url_for('hub.dashboard') }}">
+<input type="hidden" name="tab" value="{{ tab }}">
+<input type="search" name="q" maxlength="80" placeholder="Kämpfe, Boxer oder Gewichtsklasse suchen" value="{{ search }}">
+<button type="submit">SUCHEN →</button></form>
 {% if event %}<a class="back" href="{{ url_for('hub.dashboard',tab='events') }}">← Alle Veranstaltungen</a>{% endif %}
 {% if fights %}<div class="fights">{% for fight in fights %}
 <a class="fight-row" href="{{ url_for('hub.fight',fight_id=fight.id) }}">
@@ -29,6 +33,21 @@
 <a class="fighter-card" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}"><div class="fighter-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span>🥊</span></div>
 <div class="fighter-info"><small>{{ fighter.division or 'BOXING' }}</small><h3>{{ fighter.name }}</h3><p>{{ (fighter.wins ~ '–' ~ fighter.losses ~ '–' ~ (fighter.draws or 0)) if fighter.wins is not none and fighter.losses is not none else 'Bilanz noch nicht verfügbar' }}</p><b>PROFIL ANSEHEN →</b></div></a>
 {% endfor %}</div>{% else %}<div class="empty">Keine Boxer gefunden. Bitte API-Zugang prüfen oder andere Schreibweise versuchen.</div>{% endif %}
+{% elif tab=='organizations' %}
+<form class="search" action="{{ url_for('hub.dashboard') }}">
+<input type="hidden" name="tab" value="organizations">
+<input type="search" name="q" maxlength="80" value="{{ search }}" placeholder="Organisation suchen: WBA, WBC, IBF, WBO">
+<button type="submit">SUCHEN →</button></form>
+<div class="event-grid">
+{% for org in organizations %}
+<div class="event-card"><div class="eyebrow">WELTBOXVERBAND</div>
+<h3>{{ org.code }} – {{ org.name }}</h3>
+<p>{{ org.description }}</p>
+<p>Der Weltmeistertitel wird je Gewichtsklasse vergeben. Aktuelle Titelträger und Ranglisten bei der Organisation prüfen.</p>
+<a href="{{ org.website }}" rel="noopener noreferrer" target="_blank">OFFIZIELLE TITEL UND RANGLISTEN ↗</a>
+</div>
+{% endfor %}
+</div>
 {% elif tab=='events' %}
 {% if events %}<div class="event-grid">{% for ev in events %}
 <a class="event-card" href="{{ url_for('hub.dashboard',tab='upcoming',event=ev.id) }}"><div class="eyebrow">BOXING EVENT</div><h3>{{ ev.title or 'Boxevent' }}</h3><strong>{{ ev.event_date|fightdate }}</strong><p>{{ ev.venue or 'Arena noch offen' }}</p><small>{{ ev.location or '' }}</small><b>FIGHT CARD →</b></a>

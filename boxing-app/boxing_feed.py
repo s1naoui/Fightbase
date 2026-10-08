@@ -452,3 +452,23 @@ def photo(fid,name):
     from identity_photos import verified_photo
     return verified_photo(fid,name)
 
+
+# Direct sources are official organisation pages, not unverified current belts.
+ORGANIZATIONS = [
+  {"code":"WBA","name":"World Boxing Association","website":"https://www.wbaboxing.com/wba-ranking","description":"Weltmeistertitel nach Gewichtsklasse; verschiedene Titelvarianten möglich."},
+  {"code":"WBC","name":"World Boxing Council","website":"https://wbcboxing.com/en/","description":"Weltmeistertitel nach Gewichtsklasse und offizielle Ranglisten."},
+  {"code":"IBF","name":"International Boxing Federation","website":"https://www.ibf-usba-boxing.com/","description":"Weltmeistertitel und offizielle Ranglisten nach Gewichtsklasse."},
+  {"code":"WBO","name":"World Boxing Organization","website":"https://wboboxing.com/rankings/","description":"Weltmeistertitel, Ranglisten und Titelkämpfe nach Gewichtsklasse."}
+]
+
+def search_fights(term, kind="upcoming", limit=65):
+    term=(term or "").strip()[:80]
+    if not term:
+        return upcoming(limit) if kind == "upcoming" else results(limit)
+    now=date.today().isoformat()
+    clause="substr(fight_date,1,10)>=? AND status IN ('NOT_STARTED','LIVE')" if kind=="upcoming" else "status='FINISHED'"
+    return rows(f"""SELECT * FROM hub_fights WHERE {clause}
+        AND trim(COALESCE(a_name,''))!='' AND trim(COALESCE(b_name,''))!=''
+        AND (a_name LIKE ? OR b_name LIKE ? OR division LIKE ? OR event_title LIKE ?)
+        ORDER BY fight_date {'ASC' if kind=='upcoming' else 'DESC'} LIMIT ?""",
+        ((now,) if kind=="upcoming" else ()) + tuple("%"+term+"%" for _ in range(4)) + (limit,))

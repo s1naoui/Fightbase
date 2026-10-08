@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ url_for('static',filename='hub.css') }}"></head>
 <body>
 <header class="topbar"><div class="top-inner"><a class="brand" href="{{ url_for('hub.dashboard') }}">🥊 FIGHT<span>BASE</span><small>BOXING INTELLIGENCE</small></a>
-<nav><a href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kämpfe</a><a href="{{ url_for('hub.dashboard',tab='results') }}">Ergebnisse</a><a href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a><a href="{{ url_for('hub.dashboard',tab='events') }}">Events</a></nav>
+<nav><a href="{{ url_for('hub.dashboard',tab='upcoming') }}">Kämpfe</a><a href="{{ url_for('hub.dashboard',tab='results') }}">Ergebnisse</a><a href="{{ url_for('hub.dashboard',tab='fighters') }}">Boxer</a><a href="{{ url_for('hub.dashboard',tab='rankings') }}">Ranglisten</a><a href="{{ url_for('hub.dashboard',tab='organizations') }}">Organisationen</a><a href="{{ url_for('hub.dashboard',tab='events') }}">Events</a></nav>
 <a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a></div></header>
 <main class="container">
 {% if not status.configured %}

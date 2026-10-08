@@ -22,7 +22,7 @@ def dashboard():
     if tab is None:
         # Show populated historical results when free live schedules are empty.
         tab="upcoming" if feed.upcoming() else "results"
-    if tab not in ("upcoming","results","fighters","events","rankings"):
+    if tab not in ("upcoming","results","fighters","events","rankings","organizations"):
         tab="upcoming"
     search=request.args.get("q","").strip()[:80]
     event=request.args.get("event","").strip()[:80]
@@ -31,13 +31,16 @@ def dashboard():
         division=1
     if tab=="fighters" and len(search)>=3:
         feed.search_fighter(search)
-    upcoming=[f for f in feed.event_fights(event) if feed._has_two_boxers(f["a_name"],f["b_name"])] if event else feed.upcoming()
+    upcoming=[f for f in feed.event_fights(event) if feed._has_two_boxers(f["a_name"],f["b_name"])] if event else feed.search_fights(search,"upcoming") if tab=="upcoming" else feed.upcoming()
+    results=feed.search_fights(search,"results") if tab=="results" else feed.results()
+    organizations=[o for o in feed.ORGANIZATIONS if search.casefold() in
+       (o["code"]+" "+o["name"]).casefold()] if tab=="organizations" else feed.ORGANIZATIONS
     return render_template("hub_dashboard.html",page="dashboard",tab=tab,
-      status=feed.status(),upcoming=upcoming,results=feed.results(),
+      status=feed.status(),upcoming=upcoming,results=results,
       fighters=feed.fighters(search if tab=="fighters" else ""),events=feed.events(),
       ranking=feed.rankings(division) if tab=="rankings" else [],
       division=division,divisions=feed.DIVISIONS,search=search,event=event,
-      archive_count=feed.archive_count(),fighters_count=feed.fighters_count())
+      archive_count=feed.archive_count(),fighters_count=feed.fighters_count(),organizations=organizations)
 
 @bp.route("/kampf/<fight_id>")
 def fight(fight_id):
