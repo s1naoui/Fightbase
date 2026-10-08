@@ -203,6 +203,8 @@ def upload_photo(fighter_id):
         with Image.open(io.BytesIO(data)) as original:
             if original.format not in ("JPEG","PNG","WEBP"):
                 raise ValueError("Nur JPG, PNG oder WebP sind erlaubt.")
+            if original.width*original.height>16_000_000:
+                raise ValueError("Bild hat zu viele Pixel (maximal 16 Megapixel).")
             original=ImageOps.exif_transpose(original)
             if original.width < 250 or original.height < 250:
                 raise ValueError("Das Foto muss mindestens 250 × 250 Pixel haben.")
@@ -286,11 +288,23 @@ def save_record(fighter_id):
 @bp.post("/admin/boxer/<fighter_id>/bilanz/zuruecksetzen")
 def reset_record(fighter_id):
     _require_admin_post()
-    _fighter_or_404(fighter_id)
+    person=_fighter_or_404(fighter_id)
+    from verified_fights import RECORDS, fighter_key, AS_OF
+    restored=next((record for record in RECORDS if fighter_key(record[0])==fighter_id),None)
     with feed.connect() as db:
         db.execute("DELETE FROM hub_admin_records WHERE fighter_id=?",(fighter_id,))
-    # An existing seeded record will be restored on the next app restart.
-    flash("Manuelle Bilanz-Änderung zurückgesetzt. Nach Neustart gelten wieder die Quelldaten.","success")
+        if restored:
+            _,wins,losses,draws,ko,*_=restored
+            db.execute("""UPDATE hub_fighters SET wins=?,losses=?,draws=?,ko_wins=?,
+                updated_at=? WHERE id=?""",
+                (wins,losses,draws,ko,AS_OF,fighter_id))
+        else:
+            db.execute("""UPDATE hub_fighters SET wins=NULL,losses=NULL,draws=NULL,
+                ko_wins=NULL,updated_at=? WHERE id=?""",
+                (feed.utcnow(),fighter_id))
+    flash("Manuelle Bilanz entfernt. Die ursprünglichen verifizierten Zahlen wurden wiederhergestellt"
+          if restored else "Manuelle Bilanz entfernt. Ohne verifizierte Quelle sind die Werte jetzt unbekannt.",
+          "success")
     return _back(fighter_id)
 
 
