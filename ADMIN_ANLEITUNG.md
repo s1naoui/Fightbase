@@ -47,3 +47,54 @@ Für Backups lokal sichern:
 - boxing-app/uploads/
 
 Die SQLite-Datenbank wurde in einem früheren Entwicklungsstand versehentlich auf GitHub eingecheckt. Beim Aktualisieren mit git pull **keine lokalen Daten löschen**. Bei Git-Konflikten zuerst Backup und git status prüfen.
+
+
+## Neu: Alle Boxerfotos mit einer ZIP-Datei importieren
+
+Du musst nicht mehr jedes Foto einzeln hochladen.
+
+### ZIP unter Windows vorbereiten
+
+1. Lege einen Ordner `Boxerfotos` auf deinem PC an.
+2. Speichere die Bilder darin, **benannt nach dem Boxer in Fightbase**:
+   - `Tyson Fury.jpg`
+   - `Anthony Joshua.png`
+   - `Oleksandr Usyk.webp`
+3. Rechtsklick auf den Ordner → **Senden an → ZIP-komprimierter Ordner**
+   (oder in Windows 11: **In ZIP-Datei komprimieren**).
+4. Öffne Fightbase und melde dich unter `http://127.0.0.1:5000/admin` an.
+5. Oben im Bereich **Alle Boxerfotos auf einmal** die ZIP-Datei auswählen und
+   **ZIP importieren und automatisch zuordnen** anklicken.
+6. Fightbase zeigt danach einen **Importbericht mit Vorschaubildern**. Einträge
+   ohne Treffer, mit mehreren gleichnamigen Boxern oder mit Dateifehlern werden
+   erklärt und **nicht** blind zugeordnet.
+
+### Falls zwei Profile denselben Namen haben
+
+Standardmäßig genügt `Tyson Fury.jpg`, **sofern der Name in der Datenbank
+eindeutig ist**. Bei mehreren gleichen Namen wird absichtlich nicht geraten.
+In diesem Fall die Profil-ID aus der Admin-Boxerkarte übernehmen und so benennen:
+
+`Tyson Fury__reviewed-tyson-fury.jpg`
+
+Die Schreibweise des Namens muss mit dem gewählten Boxerprofil übereinstimmen.
+Ein falsch geschriebener oder unbekannter Name wird im Importbericht als
+`übersprungen` angezeigt. Fightbase überprüft **nicht**, ob das Gesicht im
+Foto wirklich zum Dateinamen passt – bitte die Bilder selbst korrekt auswählen.
+
+### Grenzen und Sicherheit
+
+- Pro ZIP maximal **250 Dateien** und maximal **64 MB komprimiert**.
+- Insgesamt maximal **120 MB entpackter Bildinhalt**.
+- Pro Foto maximal **5 MB**, maximal **16 Megapixel**, mindestens 250×250 Pixel.
+- Unterstützte Dateien: JPG, JPEG, PNG und WebP.
+- Fotos werden in sicheres, kompaktes WebP umgewandelt; ZIP-Pfade werden
+  niemals direkt in den Upload-Ordner entpackt.
+- **Vorhandene eigene Bilder bleiben erhalten**, es sei denn, du aktivierst
+  die Checkbox **„Bereits selbst hochgeladene Bilder ersetzen“**.
+- Nach dem Upload wird die originale ZIP-Datei nicht gespeichert. Die
+  automatisch zugeordneten WebP-Fotos liegen **nur auf deinem Computer** in
+  `boxing-app/uploads/fighter_photos`, nicht im GitHub-Repository.
+- ZIP-Dateien und Fotos nur aus vertrauenswürdiger Quelle verwenden und nur
+  Bilder hochladen, für deren Nutzung du eine Berechtigung hast.
+- Der Importbericht bleibt lokal in deiner SQLite-Datenbank erhalten.

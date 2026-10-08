@@ -292,3 +292,38 @@ gap:12px;border-bottom:1px solid #465571;padding:9px 0;font-size:14px}
  color:#b6cbe5;font-size:14px}
 .rating-row span{display:flex;gap:8px;align-items:center}
 .rating-row b{font-size:18px;color:white}
+
+
+/* ZIP photo bulk import */
+.admin-bulk-panel{margin:18px 0 30px;}
+.admin-bulk-panel h2{font-size:clamp(32px,4vw,47px);font-style:italic;margin:8px 0 10px;}
+.admin-bulk-panel>p{font-size:15px;line-height:1.7;max-width:930px;}
+.admin-zip-names{display:flex;flex-wrap:wrap;gap:11px;margin:19px 0;}
+.admin-zip-names span{display:inline-block;padding:9px 14px;border:1px solid #536a90;
+ border-radius:9px;background:#0b182b;font-size:13px;font-weight:700;color:#dbeaff;}
+.admin-bulk-panel .admin-form{max-width:690px;margin:20px 0 15px;}
+.admin-zip-checkbox{display:flex!important;flex-direction:row!important;
+ align-items:center;gap:12px!important;font-size:15px!important;cursor:pointer;}
+.admin-zip-checkbox input{min-width:19px;width:19px;height:19px;accent-color:#ff3d56;}
+.admin-bulk-panel button{font-size:15px;min-height:49px;}
+.admin-report-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:24px 0;}
+.admin-report-summary>div{background:#1b2b42;border:1px solid #435b7d;border-radius:10px;padding:18px;color:#c2d3ea;}
+.admin-report-summary strong{display:block;font:900 40px 'Barlow Condensed',sans-serif;color:#fff;}
+.admin-report-summary small{display:block;font-size:13px;}
+.admin-report-list{display:flex;flex-direction:column;gap:10px;margin:21px 0 65px;}
+.admin-report-item{display:flex;align-items:center;gap:15px;border:1px solid #394e6c;
+ border-radius:10px;padding:12px 15px;background:#132038;min-width:0;}
+.admin-report-item img{width:80px;height:80px;object-fit:cover;object-position:center 20%;
+ border:1px solid #5b759b;border-radius:9px;}
+.admin-report-item>div{min-width:0;flex:1;}
+.admin-report-item strong{display:block;font-size:15px;overflow-wrap:anywhere;}
+.admin-report-item p{font-size:13px;line-height:1.6;color:#b9cbe4;overflow-wrap:anywhere;margin:6px 0;}
+.admin-report-item a{font-size:13px;color:#86c1ff;text-decoration:underline;}
+.admin-report-item .result-success{color:#76e5aa;}
+.admin-report-item .result-replace{color:#9bd3ff;}
+.admin-report-item .result-skip{color:#ffc18a;}
+.admin-report-item .result-error{color:#ff8d9c;}
+@media(max-width:690px){
+  .admin-report-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .admin-report-item img{width:60px;height:60px;}
+}

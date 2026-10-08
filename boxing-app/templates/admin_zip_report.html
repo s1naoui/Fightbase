@@ -1,0 +1,49 @@
+{% extends "hub_base.html" %}
+{% block title %}Foto-Massenimport · Fightbase Admin{% endblock %}
+{% block main %}
+<a class="back" href="{{ url_for('admin.dashboard') }}#zip-fotos">← ZURÜCK ZUM ADMIN-BEREICH</a>
+<section class="admin-intro-header">
+  <div>
+    <div class="eyebrow">FIGHTBASE CONTROL CENTER · PHOTO IMPORT</div>
+    <h1 class="admin-title">IMPORT <em>ERGEBNIS.</em></h1>
+    <p>Deine ZIP-Datei wurde verarbeitet. Hier siehst du jede automatisch zugeordnete Datei und alle Bilder, die du noch prüfen musst.</p>
+  </div>
+</section>
+<div class="admin-report-summary">
+ <div><strong>{{ report.imported }}</strong><small>Neue Fotos zugeordnet</small></div>
+ <div><strong>{{ report.replaced }}</strong><small>Fotos ersetzt</small></div>
+ <div><strong>{{ report.skipped }}</strong><small>Übersprungen</small></div>
+ <div><strong>{{ report.errors }}</strong><small>Fehlerhafte Dateien</small></div>
+</div>
+<p class="hint">ZIP mit {{ report.files }} Dateien · Import am {{ created_at[:16] }} UTC. Bei mehreren Boxerprofilen mit gleichem Namen verwende den Dateinamen <strong>Name__profil-id.jpg</strong>; die richtige ID findest du im Admin-Profil.</p>
+<div class="admin-report-list">
+{% for entry in report.entries %}
+<article class="admin-report-item">
+ {% if entry.fighter_id and entry.status in ('imported','replaced') %}
+ <img src="{{ url_for('admin.photo',fighter_id=entry.fighter_id) }}" alt="Hochgeladenes Boxerfoto von {{ entry.boxer }}" loading="lazy">
+ {% endif %}
+ <div>
+  <strong>{{ entry.filename }}</strong>
+  {% if entry.status == 'imported' %}
+    <p class="result-success">✓ Automatisch zugeordnet: {{ entry.boxer }}</p>
+  {% elif entry.status == 'replaced' %}
+    <p class="result-replace">✓ Bestehendes Foto ersetzt: {{ entry.boxer }}</p>
+  {% elif entry.status == 'skipped' %}
+    <p class="result-skip">– Übersprungen{% if entry.boxer %}: {{ entry.boxer }}{% endif %}</p>
+  {% else %}
+    <p class="result-error">✕ Importfehler{% if entry.boxer %}: {{ entry.boxer }}{% endif %}</p>
+  {% endif %}
+  <p>{{ entry.reason }}</p>
+  {% if entry.fighter_id and entry.status in ('imported','replaced') %}
+    <a href="{{ url_for('hub.fighter',fighter_id=entry.fighter_id) }}">Boxerprofil öffnen ↗</a>
+  {% endif %}
+ </div>
+</article>
+{% endfor %}
+</div>
+<div class="admin-help">
+  <strong>Fehlende Bilder nachladen?</strong>
+  <p>Ändere nur die nicht zugeordneten Dateinamen und erstelle eine neue ZIP-Datei. Ein bereits hochgeladenes Foto bleibt bestehen, solange du „Bestehende Bilder ersetzen“ nicht aktivierst.</p>
+  <a class="cta" href="{{ url_for('admin.dashboard') }}#zip-fotos">WEITERE ZIP IMPORTIEREN →</a>
+</div>
+{% endblock %}
