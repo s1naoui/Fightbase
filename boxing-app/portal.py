@@ -28,7 +28,7 @@ def dashboard():
         division=1
     if tab=="fighters" and len(search)>=3:
         feed.search_fighter(search)
-    upcoming=feed.event_fights(event) if event else feed.upcoming()
+    upcoming=[f for f in feed.event_fights(event) if feed._has_two_boxers(f["a_name"],f["b_name"])] if event else feed.upcoming()
     return render_template("hub_dashboard.html",page="dashboard",tab=tab,
       status=feed.status(),upcoming=upcoming,results=feed.results(),
       fighters=feed.fighters(search if tab=="fighters" else ""),events=feed.events(),
@@ -42,6 +42,8 @@ def fight(fight_id):
     row=feed.one("SELECT * FROM hub_fights WHERE id=?",(fight_id,))
     if not row:
         abort(404)
+    if not feed._has_two_boxers(row["a_name"], row["b_name"]):
+        return redirect(url_for("hub.dashboard", tab="events"))
     a=feed.fighter_detail(row["a_id"]) if row["a_id"] else None
     b=feed.fighter_detail(row["b_id"]) if row["b_id"] else None
     probability=None

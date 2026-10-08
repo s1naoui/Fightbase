@@ -8,6 +8,15 @@ class FreeFeedMappingTests(unittest.TestCase):
         self.assertFalse(feed._is_boxing({'strSport':'Fighting','strLeague':'UFC MMA'}))
         self.assertFalse(feed._is_boxing({'strSport':'Soccer','strLeague':'Boxing League'}))
 
+    def test_combat_sports_not_misclassified_as_boxing(self):
+        self.assertFalse(feed._is_boxing({
+            "strSport": "Fighting", "strLeague": "ONE Championship",
+            "strEvent": "ONE The Inner Circle 34", "strDescriptionEN": "Kickboxing"
+        }))
+        self.assertFalse(feed._has_two_boxers("", ""))
+        self.assertFalse(feed._has_two_boxers("TBA", "Tyson Fury"))
+        self.assertTrue(feed._has_two_boxers("Tyson Fury", "Oleksandr Usyk"))
+
     def test_fighter_names(self):
         a,b=feed._split_match({'strEvent':'Tyson Fury vs Oleksandr Usyk'})
         self.assertEqual((a,b),('Tyson Fury','Oleksandr Usyk'))
