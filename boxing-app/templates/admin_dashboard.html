@@ -1,0 +1,96 @@
+{% extends "hub_base.html" %}
+{% block title %}Fightbase · Admin-Bereich{% endblock %}
+{% block main %}
+<section class="admin-intro-header">
+ <div><div class="eyebrow">FIGHTBASE MANAGEMENT</div><h1 class="admin-title">BOXER <em>VERWALTEN.</em></h1><p>Ein eigenes, hochwertiges Foto pro Boxerprofil hochladen und belegte Bilanzen pflegen.</p></div>
+ <form method="post" action="{{ url_for('admin.logout') }}"><input type="hidden" name="csrf_token" value="{{ token }}"><button type="submit" class="admin-outline">Abmelden</button></form>
+</section>
+{% for category,message in get_flashed_messages(with_categories=true) %}
+ <div class="admin-alert {{ 'admin-error' if category=='error' else 'admin-success' }}" role="status">{{ message }}</div>
+{% endfor %}
+<div class="admin-help">
+ <strong><icon name="shield-check" inline/> Deine Daten bleiben auf deinem PC.</strong>
+ <p>Hochgeladene Fotos werden lokal unter <code>boxing-app/uploads/fighter_photos</code> gespeichert und sind absichtlich nicht Teil von GitHub. Bitte lade nur Fotos hoch, die du rechtmäßig verwenden darfst. Das Bild ersetzt für das ausgewählte Boxerprofil die automatische Bildsuche.</p>
+</div>
+<form class="search admin-search" action="{{ url_for('admin.dashboard') }}" method="get">
+ <input type="search" name="q" value="{{ q }}" placeholder="Boxer suchen, z. B. Usyk, Fury oder Dubois" aria-label="Boxer suchen" minlength="2">
+ <button type="submit">BOXER FINDEN →</button>
+</form>
+<p class="hint">{{ 'Suchergebnisse für „' ~ q ~ '“' if q else 'Erste Boxer aus dem Archiv – nutze die Suche für weitere Profile' }}</p>
+{% if fighters %}
+<div class="admin-fighter-grid">
+ {% for fighter in fighters %}
+ {% set existing=photos.get(fighter.id) %}
+ {% set manual=records.get(fighter.id) %}
+ <section class="admin-fighter" id="fighter-{{ fighter.id }}">
+  <div class="admin-fighter-head">
+    <div><div class="eyebrow">{{ fighter.division or "BOXING" }}</div><h2>{{ fighter.name }}</h2><small>Profil-ID: {{ fighter.id }}</small></div>
+    <a class="admin-profile-link" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}" target="_blank" rel="noopener noreferrer">Profil ↗</a>
+  </div>
+  <div class="admin-preview" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}">
+    {% if existing %}
+      <img src="{{ url_for('admin.photo',fighter_id=fighter.id,v=existing.updated_at) }}" loading="lazy" alt="Eigenes Foto von {{ fighter.name }}">
+    {% else %}
+      <span class="missing-photo">Noch kein eigenes Foto – automatische Bildsuche</span>
+    {% endif %}
+  </div>
+  <div class="admin-label-row"><strong>Foto verwalten</strong><span>{{ "EIGENES FOTO AKTIV" if existing else "AUTOMATISCHES FOTO" }}</span></div>
+  <form method="post" action="{{ url_for('admin.upload_photo',fighter_id=fighter.id) }}" enctype="multipart/form-data" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ token }}"><input type="hidden" name="q" value="{{ q }}">
+    <label>Bild auswählen <small>(JPG, PNG oder WebP, max. 5 MB)</small>
+      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+    </label>
+    <label>Bildquelle / Fotograf (optional)<input type="url" name="source_url" placeholder="https://..."></label>
+    <button class="admin-primary" type="submit">FOTO HOCHLADEN / ERSETZEN</button>
+  </form>
+  {% if existing %}
+  <form method="post" action="{{ url_for('admin.delete_photo',fighter_id=fighter.id) }}" onsubmit="return confirm('Eigenes Foto wirklich entfernen?')">
+    <input type="hidden" name="csrf_token" value="{{ token }}"><input type="hidden" name="q" value="{{ q }}">
+    <button class="admin-danger" type="submit">Eigenes Foto entfernen</button>
+  </form>
+  {% endif %}
+  <details class="admin-records">
+    <summary>Bilanz {{ "bearbeiten" if manual or fighter.wins is not none else "ergänzen" }} <span>{{ (fighter.wins ~ '–' ~ fighter.losses ~ '–' ~ (fighter.draws or 0)) if fighter.wins is not none and fighter.losses is not none else "Nicht verfügbar" }}</span></summary>
+    <p class="hint">Nur echte Zahlen eintragen. Eine öffentliche Quellen-URL ist Pflicht. Manuelle Angaben haben nach dem Neustart Vorrang vor importierten Daten.</p>
+    <form method="post" action="{{ url_for('admin.save_record',fighter_id=fighter.id) }}" class="admin-form">
+      <input type="hidden" name="csrf_token" value="{{ token }}"><input type="hidden" name="q" value="{{ q }}">
+      <div class="admin-stats">
+      <label>Siege<input type="number" name="wins" min="0" max="150" required value="{{ fighter.wins if fighter.wins is not none else '' }}"></label>
+      <label>Niederlagen<input type="number" name="losses" min="0" max="150" required value="{{ fighter.losses if fighter.losses is not none else '' }}"></label>
+      <label>Unentschieden<input type="number" name="draws" min="0" max="150" required value="{{ fighter.draws if fighter.draws is not none else '' }}"></label>
+      <label>KO-Siege<input type="number" name="ko_wins" min="0" max="150" required value="{{ fighter.ko_wins if fighter.ko_wins is not none else '' }}"></label>
+      </div>
+      <label>Quellen-URL<input type="url" name="source_url" required placeholder="https://..." value="{{ manual.source_url if manual else '' }}"></label>
+      <button class="admin-primary" type="submit">BILANZ SPEICHERN</button>
+    </form>
+    {% if manual %}
+    <form method="post" action="{{ url_for('admin.reset_record',fighter_id=fighter.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ token }}"><input type="hidden" name="q" value="{{ q }}">
+      <button type="submit" class="admin-danger">Manuelle Bilanz zurücksetzen</button>
+    </form>
+    {% endif %}
+  </details>
+ </section>
+ {% endfor %}
+</div>
+{% else %}
+ <div class="empty"><h2>Kein Boxer gefunden</h2><p>Versuche eine andere Schreibweise. Das Archiv enthält nicht alle Profiboxer.</p></div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+// Existing manual photo previews are already attached; no duplicate network image.
+document.querySelectorAll(".admin-preview[data-fighter-photo]").forEach(box=>{
+ if(box.querySelector("img"))return;
+ const id=box.dataset.fighterPhoto;
+ fetch({{ url_for('hub.dashboard')|tojson }}+"api/foto/"+encodeURIComponent(id))
+ .then(r=>r.json()).then(data=>{
+  if(!data.url)return;
+  const img=document.createElement("img");img.loading="lazy";
+  img.alt=box.dataset.fighterName;img.src=data.url;
+  img.onload=()=>{const placeholder=box.querySelector(".missing-photo");if(placeholder)placeholder.hidden=true;};
+  box.prepend(img);
+ }).catch(()=>{});
+});
+</script>
+{% endblock %}
