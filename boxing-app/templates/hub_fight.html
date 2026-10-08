@@ -15,7 +15,7 @@
 {% set fid=fight.a_id if side=='a' else fight.b_id %}
 {% set person=a if side=='a' else b %}
 <section class="duel-side {{ 'side-red' if side=='a' else 'side-blue' }}">
-<div class="duel-photo" data-fighter-photo="{{ fid }}" data-fighter-name="{{ name }}"><span>🥊</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
+<div class="duel-photo" data-fighter-photo="{{ fid }}" data-fighter-name="{{ name }}"><span class="missing-photo">Kein verifiziertes Foto</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
 <div class="duel-name"><small>{{ 'RED CORNER' if side=='a' else 'BLUE CORNER' }}</small><h2>{{ name or 'Noch offen' }}</h2><p>{{ (person.wins ~ '–' ~ person.losses ~ '–' ~ (person.draws or 0)) if person and person.wins is not none and person.losses is not none else 'Bilanz offen' }}</p>
 {% if fid %}<a href="{{ url_for('hub.fighter',fighter_id=fid) }}">BOXERPROFIL →</a>{% endif %}</div>
 </section>

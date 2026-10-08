@@ -3,7 +3,7 @@
 Dieser Stand trennt **belegte Fakten** von **fehlenden Daten**.
 
 ## Lieferumfang
-- 3 angekündigte echte Kämpfe mit beiden Boxern, Datum, Veranstaltungsbeginn in Ortszeit, Arena, Quelle und Prüfdatum 08.10.2026. Termine können sich ändern; kein Echtzeit-Abgleich aus einer vollständig kostenlosen API.
+- 8 angekündigte echte Kämpfe mit beiden Boxern, Datum, Veranstaltungsbeginn in Ortszeit, Arena, Quelle und Prüfdatum 08.10.2026. Termine können sich ändern; kein Echtzeit-Abgleich aus einer vollständig kostenlosen API.
 - Übernommene, belegte Bilanzen bei sechs aktiven Boxern: Schofield, Bahdi, Dubois, Wardley, Fury und Joshua. Andere Karrierebilanzen werden **nicht erfunden**.
 - Historische echte Boxkämpfe und Ergebnisse aus Open Boxing mit KO/TKO/Entscheidung soweit im Archiv vorhanden.
 - Nur genau **ein** per Wikidata-Entity (exakter Name + Boxerberuf + P18) zugeordnetes Wikimedia-Foto. Bei fehlender/uneindeutiger Quelle wird absichtlich kein Foto angezeigt. Fotos müssen nicht neu sein. Alte unüberprüfte Fotoauswahlen werden nicht genutzt.

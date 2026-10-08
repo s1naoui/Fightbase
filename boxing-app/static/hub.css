@@ -22,3 +22,7 @@ footer{text-align:center;padding:30px 12px;border-top:1px solid #263852;color:#8
 .three-prob-bar .bar-a{background:linear-gradient(90deg,#a91332,#ff6072)}
 .three-prob-bar .bar-draw{background:#c4cfdd}
 .three-prob-bar .bar-b{background:linear-gradient(90deg,#2469c9,#64b3ff)}
+
+.missing-photo{font:700 12px Inter,Arial,sans-serif;color:#d2dce9;
+letter-spacing:.2px;padding:12px 15px;border:1px solid #5d6f87;border-radius:8px;
+background:#0a1526ba;max-width:90%;text-align:center}

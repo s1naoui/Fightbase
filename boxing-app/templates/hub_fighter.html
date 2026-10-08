@@ -7,7 +7,7 @@
 {% if reference %}
 <p class="hint">Bilanz nach öffentlich verfügbarer Quelle, überprüft am {{ reference.reviewed_on }}. <a href="{{ reference.source_url }}" target="_blank" rel="noopener noreferrer">Quellenprofil ↗</a>. Die Zahlen können sich durch spätere Kämpfe ändern.</p>
 {% endif %}
-<div class="profile-hero"><div class="profile-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span>🥊</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
+<div class="profile-hero"><div class="profile-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span class="missing-photo">Kein verifiziertes Foto</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
 <div><div class="eyebrow">FIGHTER PROFILE</div><h1>{{ fighter.name }}</h1><p>{{ fighter.nickname or fighter.division or 'Professioneller Boxer' }}</p>
 <div class="stats"><div><b>{{ fighter.wins if fighter.wins is not none else '–' }}</b>Siege</div><div><b>{{ fighter.losses if fighter.losses is not none else '–' }}</b>Niederlagen</div><div><b>{{ fighter.draws if fighter.draws is not none else '–' }}</b>Unentschieden</div><div><b>{{ fighter.ko_wins if fighter.ko_wins is not none else "–" }}</b>K.o.-Siege</div></div></div></div>
 <div class="detail-grid">
