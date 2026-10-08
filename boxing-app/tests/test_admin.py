@@ -118,6 +118,16 @@ class AdminTests(unittest.TestCase):
         self.assertEqual(bad.status_code,302)
         self.assertEqual(feed.one("SELECT wins FROM hub_fighters WHERE id=?",(self.fid,))["wins"],37)
 
+    def test_knockout_stats_affect_three_way_rating(self):
+        from prediction import calculate_three_way
+        a={"name":"A","age":28,"wins":24,"losses":1,"draws":0,"ko_wins":21}
+        b={"name":"B","age":28,"wins":24,"losses":1,"draws":0,"ko_wins":3}
+        result=calculate_three_way(a,b)
+        self.assertGreater(result["score_a"],result["score_b"])
+        self.assertGreater(result["probability_a"],result["probability_b"])
+        self.assertAlmostEqual(result["probability_a"]+
+            result["probability_b"]+result["probability_draw"],100.0)
+
     def test_add_sourced_fight_and_remove_it(self):
         self.login()
         day=(date.today()+timedelta(days=30)).isoformat()

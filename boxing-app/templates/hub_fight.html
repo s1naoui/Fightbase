@@ -37,7 +37,8 @@
  <span class="bar-draw" style="width:{{ probability.probability_draw }}%"></span>
  <span class="bar-b" style="width:{{ probability.probability_b }}%"></span>
 </div>
-<p>{{ probability.method }}. Summe: 100 %. Keine Wettquoten.</p>
+<div class="rating-row"><span>Fightbase-Rating: {{ a.name }} <b>{{ probability.score_a }}/100</b></span><span>{{ b.name }} <b>{{ probability.score_b }}/100</b></span></div>
+<p>{{ probability.method }}. Bewertet werden Siegquote, Erfahrung, K.o.-Rate, Niederlagen und Alter (soweit bekannt). Summe: 100 %. Keine Wettquoten.</p>
 <form method="post" action="{{ url_for('hub.analyse',fight_id=fight.id) }}"><button class="cta" type="submit">VERGLEICH SPEICHERN →</button></form>
 {% else %}<p>Eine Drei-Ausgänge-Prognose gibt es nur für kommende Duelle mit zwei verfügbaren Bilanzen. Historische Kämpfe werden nicht nachträglich prognostiziert.</p>{% endif %}
 </section></div>

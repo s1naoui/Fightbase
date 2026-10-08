@@ -285,3 +285,10 @@ footer { font-size: 14px; line-height: 1.65; }
 gap:12px;border-bottom:1px solid #465571;padding:9px 0;font-size:14px}
 .admin-manual-fights form{margin:0}
 .admin-manual-fights .admin-danger{margin:0}
+
+/* Transparent 100-point Fightbase rating next to three-way result */
+.rating-row{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;
+ padding:15px 0;margin-top:10px;border-bottom:1px solid #334864;
+ color:#b6cbe5;font-size:14px}
+.rating-row span{display:flex;gap:8px;align-items:center}
+.rating-row b{font-size:18px;color:white}

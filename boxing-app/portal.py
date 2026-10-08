@@ -59,8 +59,10 @@ def fight(fight_id):
     ):
         try:
             probability=calculate_three_way(
-                {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"]},
-                {"name":b["name"],"age":b["age"],"wins":b["wins"],"losses":b["losses"]})
+                {"name":a["name"],"age":a["age"],"wins":a["wins"],"losses":a["losses"],
+                 "draws":a["draws"],"ko_wins":a["ko_wins"]},
+                {"name":b["name"],"age":b["age"],"wins":b["wins"],"losses":b["losses"],
+                 "draws":b["draws"],"ko_wins":b["ko_wins"]})
         except (KeyError,ZeroDivisionError,TypeError,ValueError):
             pass
     reference=feed.one("SELECT * FROM hub_sources WHERE entity_id=?",(fight_id,))
