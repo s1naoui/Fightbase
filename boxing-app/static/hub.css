@@ -26,3 +26,110 @@ footer{text-align:center;padding:30px 12px;border-top:1px solid #263852;color:#8
 .missing-photo{font:700 12px Inter,Arial,sans-serif;color:#d2dce9;
 letter-spacing:.2px;padding:12px 15px;border:1px solid #5d6f87;border-radius:8px;
 background:#0a1526ba;max-width:90%;text-align:center}
+
+
+/* =========================================================
+   FIGHTBASE – TYPOGRAPHY & READABILITY
+   Mobile-friendly accessible text sizes.
+   Sports headlines stay bold; readable UI text is never 10px.
+   ========================================================= */
+
+/* Base text and descriptions */
+body { font-size: 16px; line-height: 1.5; }
+.container { max-width: 1320px; }
+.free-note { font-size: 15px; line-height: 1.65; margin: 0 0 12px; color: #ced9e9; }
+.notice { font-size: 15px; }
+.eyebrow { font-size: 13px; letter-spacing: 1.8px; }
+.hint, .empty { font-size: 15px; line-height: 1.75; }
+.empty h3 { font-size: 33px; }
+
+/* Header and navigation */
+.top-inner { max-width: 1350px; gap: 20px; min-height: 80px; }
+.brand { font-size: 34px; }
+.brand small { font-size: 11px; letter-spacing: 2px; line-height: 1.25; }
+.topbar nav { gap: 18px; }
+.topbar nav a { font-size: 15px; line-height: 1.35; }
+.compare-link { font-size: 14px; padding: 12px 17px; }
+
+/* Hero content and action buttons */
+.hero p { font-size: 17px; line-height: 1.7; max-width: 640px; }
+.cta { font-size: 14px; min-height: 48px; padding: 13px 20px; }
+.hero .eyebrow { font-size: 13px; }
+
+/* Headline and summary tiles */
+.section-top h2 { font-size: clamp(35px, 4vw, 47px); line-height: 1.1; }
+.feed-status { font-size: 14px; }
+.metrics > div { font-size: 14px; line-height: 1.45; }
+.metrics strong { font-size: 47px; margin-bottom: 7px; }
+
+/* Filters, tab navigation, and search */
+.tabs { gap: 10px; }
+.tabs a { font-size: 14px; line-height: 1.35; padding: 13px 16px; }
+.search input, .search select { font-size: 16px; min-height: 48px; }
+.search label { font-size: 15px; }
+.search button { font-size: 14px; min-height: 48px; }
+.back { font-size: 14px; }
+
+/* Boxing fixture and result lists */
+.fight-row { padding: 22px 14px; grid-template-columns: 165px minmax(0,1fr) 170px 24px; }
+.date strong { font-size: 16px; }
+.date small, .details small { font-size: 13px; line-height: 1.4; }
+.matchup { font-size: 29px; }
+.matchup span { font-size: 17px; }
+.pill, .live { font-size: 13px; padding: 6px 10px; }
+
+/* Fighter, event, ranking and organisation cards */
+.fighter-info small { font-size: 13px; }
+.fighter-info h3 { font-size: 30px; }
+.fighter-info p { font-size: 15px; line-height: 1.5; }
+.fighter-info b { font-size: 13px; }
+.event-card h3, .rank-card h3 { font-size: 34px; }
+.event-card p, .event-card small { font-size: 15px; line-height: 1.6; }
+.event-card b { font-size: 13px; }
+.rank-line { font-size: 15px; line-height: 1.5; }
+
+/* Fight detail and fighter profile screens */
+.duel-name small { font-size: 13px; }
+.duel-name p { font-size: 16px; }
+.duel-name a { font-size: 14px; }
+.duel-photo a, .profile-photo a { font-size: 13px; }
+.info-panel h2 { font-size: 39px; }
+.info-panel dl { font-size: 16px; gap: 14px; }
+.info-panel p { font-size: 15px; }
+.probabilities small { font-size: 14px; }
+.stats div { font-size: 14px; }
+.profile-fights a { font-size: 15px; line-height: 1.5; }
+.missing-photo { font-size: 14px; }
+footer { font-size: 14px; line-height: 1.65; }
+
+/* Responsive fixes – increase readability without horizontal overflow */
+@media (max-width: 1100px) {
+  .top-inner { flex-wrap: wrap; justify-content: space-between; }
+  .topbar nav { order: 3; flex: 1 1 100%; justify-content: center; }
+  .fight-row { grid-template-columns: 125px minmax(0,1fr) 135px 20px; gap: 12px; }
+  .matchup { font-size: 25px; }
+}
+
+@media (max-width: 670px) {
+  .container { padding-inline: 15px; }
+  .brand { font-size: 29px; }
+  .brand small { font-size: 10px; }
+  .top-inner { gap: 12px; padding: 12px 14px; }
+  .topbar nav { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 8px; gap: 16px; }
+  .topbar nav a { font-size: 14px; flex: none; }
+  .compare-link { font-size: 13px; }
+  .hero p { font-size: 16px; }
+  .metrics > div { font-size: 13px; }
+  .metrics strong { font-size: 39px; }
+  .section-top h2 { font-size: 35px; }
+  .tabs a { font-size: 14px; }
+  .fight-row { grid-template-columns: 93px minmax(0,1fr) 20px; gap: 8px; padding: 17px 6px; }
+  .date strong { font-size: 14px; }
+  .date small { font-size: 12px; }
+  .matchup { font-size: 22px; line-height: 1.1; }
+  .matchup span { font-size: 13px; }
+  .duel-name h2 { font-size: 37px; }
+  .info-panel { padding: 20px; }
+  .info-panel dl { font-size: 15px; }
+  .probabilities small { font-size: 12px; }
+}
