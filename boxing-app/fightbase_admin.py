@@ -405,11 +405,12 @@ def zip_import():
         flash("Bitte eine ZIP-Datei mit JPG-, PNG- oder WebP-Bildern auswählen.","error")
         return redirect(url_for("admin.dashboard")+"#zip-fotos")
     from photo_bulk import ImportValidationError, import_archive
+    from zipfile import BadZipFile
     try:
         report=import_archive(upload.stream,
                               overwrite=request.form.get("overwrite")=="1")
-    except ImportValidationError as exc:
-        flash(str(exc),"error")
+    except (ImportValidationError, BadZipFile, OSError, EOFError) as exc:
+        flash("ZIP-Datei konnte nicht verarbeitet werden: "+str(exc)[:150],"error")
         return redirect(url_for("admin.dashboard")+"#zip-fotos")
     report_id=uuid.uuid4().hex
     with feed.connect() as db:

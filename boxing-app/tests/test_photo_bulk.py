@@ -112,6 +112,7 @@ class BulkPhotoImportTests(unittest.TestCase):
             self.assertEqual(picture.status_code,200)
             with Image.open(io.BytesIO(picture.data)) as opened:
                 self.assertEqual(opened.format,"WEBP")
+            picture.close()
         api=self.client.get("/api/foto/bulk-1")
         self.assertTrue(api.json["manual"])
 
