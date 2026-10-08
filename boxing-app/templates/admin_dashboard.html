@@ -24,6 +24,14 @@
  </div>
  <p class="hint">Letzter erfolgreicher Import: {{ rapid.last_success[:16] if rapid.last_success else 'Noch keiner' }}. Automatische Aktualisierung: {{ 'wöchentlich' if rapid.auto_sync else 'deaktiviert' }}.</p>
  {% if rapid.last_error %}<p class="admin-api-message">{{ rapid.last_error }}</p>{% endif %}
+ {% if rapid_summary %}
+ <p class="hint">Letzter manueller Import:
+ {% if rapid_summary.requested is defined %}{{ rapid_summary.requested }} Anfragen,
+ {{ rapid_summary.fights }} Kämpfe und {{ rapid_summary.profiles }} Boxerprofile verarbeitet.
+ {% else %}{{ rapid_summary.error or "Keine Details verfügbar." }}{% endif %}
+ </p>
+ {% if rapid_summary.errors %}<p class="admin-api-message">{{ rapid_summary.errors|join(" · ") }}</p>{% endif %}
+ {% endif %}
  <div class="admin-api-controls">
   <form method="post" action="{{ url_for('admin.test_boxing_api') }}">
     <input type="hidden" name="csrf_token" value="{{ token }}">

@@ -166,7 +166,8 @@ def dashboard():
     from boxing_rapidapi import usage
     return render_template("admin_dashboard.html",status=feed.status(),page="admin",
         fighters=fighters,q=q,photos=photo_rows,records=record_rows,token=csrf(),
-        manual_fights=mine,rapid=usage())
+        manual_fights=mine,rapid=usage(),
+        rapid_summary=json.loads(feed.meta("rapid_last_run_summary","{}") or "{}"))
 
 @bp.get("/media/boxer/<fighter_id>")
 def photo(fighter_id):
