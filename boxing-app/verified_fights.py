@@ -99,7 +99,7 @@ def seed_verified():
                location=excluded.location,event_title=excluded.event_title,
                event_id=excluded.event_id""",
               (fid,start,a+" vs "+b,fighter_key(a),fighter_key(b),a,b,division,
-               "scheduled-"+start[:10],belt+" title fight" if belt else "Boxevent",
+               event_id,belt+" title fight" if belt else "Boxevent",
                venue,city,AS_OF))
             db.execute("""INSERT INTO hub_events(id,title,event_date,venue,location,updated_at)
                 VALUES (?,?,?,?,?,?)

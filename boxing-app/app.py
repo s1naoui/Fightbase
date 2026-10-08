@@ -173,7 +173,7 @@ def search_photos(name):
     canonical=canonical_name(name)
     row=one("SELECT id FROM hub_fighters WHERE lower(name)=lower(?) ORDER BY id LIMIT 1",
             (canonical,))
-    key=row["id"] if row else "legacy-"+get_key(canonical)
+    key="legacy-"+get_key(canonical)
     verified=quick_verified_photo(key,canonical)
     if not verified.get("url"):
         return []

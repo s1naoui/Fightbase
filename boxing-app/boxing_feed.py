@@ -375,15 +375,22 @@ def fighters_count():
 
 
 def events():
+    """Only dated, verified boxing events. Do not include MMA or ONE cards."""
     return rows("""SELECT * FROM hub_events
        WHERE substr(event_date,1,10)>=?
-       AND (lower(title) LIKE '%boxing%' OR lower(title) LIKE '%boxe%'
-            OR lower(title) LIKE '%wbc%' OR lower(title) LIKE '%wba%'
-            OR lower(title) LIKE '%ibf%' OR lower(title) LIKE '%wbo%')
-       AND lower(title) NOT LIKE '%kickboxing%'
-       AND lower(title) NOT LIKE '%one championship%'
-       AND lower(title) NOT LIKE '%one the inner circle%'
+       AND (
+         id LIKE 'event-scheduled-%'
+         OR (
+          (lower(title) LIKE '%boxing%' OR lower(title) LIKE '%boxe%'
+           OR lower(title) LIKE '%wbc%' OR lower(title) LIKE '%wba%'
+           OR lower(title) LIKE '%ibf%' OR lower(title) LIKE '%wbo%')
+          AND lower(title) NOT LIKE '%kickboxing%'
+          AND lower(title) NOT LIKE '%one championship%'
+          AND lower(title) NOT LIKE '%one the inner circle%'
+         )
+       )
        ORDER BY event_date ASC LIMIT 50""",(date.today().isoformat(),))
+
 
 def fighters(search=""):
     if search:
