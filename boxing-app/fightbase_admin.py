@@ -7,6 +7,7 @@ from __future__ import annotations
 import hmac
 import io
 import json
+import threading
 import os
 import re
 import secrets
@@ -162,9 +163,11 @@ def dashboard():
     record_rows={r["fighter_id"]:r for r in feed.rows("SELECT * FROM hub_admin_records")}
     mine=feed.rows("""SELECT * FROM hub_fights WHERE id LIKE 'manual-%'
         ORDER BY fight_date DESC LIMIT 30""")
+    from boxing_rapidapi import usage
     return render_template("admin_dashboard.html",status=feed.status(),page="admin",
         fighters=fighters,q=q,photos=photo_rows,records=record_rows,token=csrf(),
-        manual_fights=mine)
+        manual_fights=mine,rapid=usage(),
+        rapid_summary=json.loads(feed.meta("rapid_last_run_summary","{}") or "{}"))
 
 @bp.get("/media/boxer/<fighter_id>")
 def photo(fighter_id):
@@ -432,3 +435,49 @@ def zip_report(report_id):
     report=json.loads(row["report_json"])
     return render_template("admin_zip_report.html",status=feed.status(),
        page="admin",report=report,created_at=row["created_at"],token=csrf())
+
+
+# Testing and manual import use the user's existing admin CSRF session.
+# Manual synchronization runs in the background rather than blocking the page.
+_RAPID_JOB_LOCK=threading.Lock()
+
+@bp.post("/admin/boxing-api/test")
+def test_boxing_api():
+    _require_admin_post()
+    from boxing_rapidapi import verify, ApiAccessError
+    try:
+        outcome=verify()  # one budgeted HTTP request
+        flash(outcome["message"],"success")
+    except ApiAccessError as exc:
+        flash("API-Test: "+str(exc),"error")
+    return redirect(url_for("admin.dashboard")+"#boxing-api")
+
+
+def _refresh_boxing_job():
+    try:
+        from boxing_rapidapi import synchronize
+        result=synchronize(force=True)
+        feed.set_meta("rapid_last_run_summary",json.dumps(result,ensure_ascii=False))
+    except Exception as exc:
+        feed.set_meta("rapid_last_run_summary",json.dumps({
+            "error":"Synchronisation fehlgeschlagen: "+type(exc).__name__
+        },ensure_ascii=False))
+    finally:
+        _RAPID_JOB_LOCK.release()
+
+
+@bp.post("/admin/boxing-api/sync")
+def sync_boxing_api():
+    _require_admin_post()
+    from boxing_rapidapi import config, usage
+    if not config()[0]:
+        flash("Bitte zuerst einen kostenlosen RapidAPI-Schlüssel lokal in .env eintragen.","error")
+    elif usage()["remaining"]==0:
+        flash("Die Fightbase-Sicherheitsgrenze für diesen Monat ist erreicht.","error")
+    elif not _RAPID_JOB_LOCK.acquire(blocking=False):
+        flash("Die Synchronisierung läuft bereits. Aktualisiere die Seite in Kürze.","error")
+    else:
+        threading.Thread(target=_refresh_boxing_job,name="rapidapi-manual-sync",
+                         daemon=True).start()
+        flash("Synchronisierung gestartet. Bitte die Seite in wenigen Sekunden neu laden.","success")
+    return redirect(url_for("admin.dashboard")+"#boxing-api")

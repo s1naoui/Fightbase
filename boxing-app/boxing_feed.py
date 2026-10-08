@@ -68,6 +68,10 @@ def init_feed():
     load_bundled_archive()
     from verified_fights import seed_verified
     seed_verified()
+    # Restore synced API records after old curated examples are seeded on startup.
+    from boxing_rapidapi import initialize as init_rapid, reapply_saved_profiles
+    init_rapid()
+    reapply_saved_profiles()
     from fightbase_admin import ensure_tables, apply_manual_records
     ensure_tables()
     apply_manual_records()
@@ -300,6 +304,12 @@ def sync():
         set_meta("last_success",utcnow())
     set_meta("error"," | ".join(errors[:2]) if errors else "")
     set_meta("feed_note","Kostenloser Feed: "+str(scanned)+" Boxeinträge gefunden; keine Vollständigkeitsgarantie.")
+    # Independent optional weekly API connection, never required for startup.
+    try:
+        from boxing_rapidapi import refresh_if_due
+        refresh_if_due()
+    except Exception as error:
+        set_meta("rapid_last_error","Boxing API-Import nicht abgeschlossen: "+type(error).__name__)
 
 
 def _worker():

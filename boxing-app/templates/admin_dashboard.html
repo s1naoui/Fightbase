@@ -12,6 +12,45 @@
  <strong><icon name="shield-check" inline/> Deine Daten bleiben auf deinem PC.</strong>
  <p>Hochgeladene Fotos werden lokal unter <code>boxing-app/uploads/fighter_photos</code> gespeichert und sind absichtlich nicht Teil von GitHub. Bitte lade nur Fotos hoch, die du rechtmäßig verwenden darfst. Das Bild ersetzt für das ausgewählte Boxerprofil die automatische Bildsuche.</p>
 </div>
+<section class="admin-panel admin-api-panel" id="boxing-api">
+ <div class="eyebrow">KOSTENLOSE BOXING DATA API · OPTIONAL</div>
+ <h2>Boxdaten automatisch importieren</h2>
+ <p>Verknüpfe Fightbase mit deinem <strong>kostenlosen Basic-Tarif</strong> bei RapidAPI. Kein API-Schlüssel wird über diese Webseite eingegeben oder auf GitHub gespeichert.</p>
+ {% if rapid.configured %}
+ <div class="admin-api-stats">
+  <div><strong>{{ rapid.used }}/{{ rapid.limit }}</strong><small>API-Versuche diesen Monat</small></div>
+  <div><strong>{{ rapid.remaining }}</strong><small>Verbleibende Fightbase-Anfragen</small></div>
+  <div><strong>{{ rapid.month }}</strong><small>Aktueller UTC-Monat</small></div>
+ </div>
+ <p class="hint">Letzter erfolgreicher Import: {{ rapid.last_success[:16] if rapid.last_success else 'Noch keiner' }}. Automatische Aktualisierung: {{ 'wöchentlich' if rapid.auto_sync else 'deaktiviert' }}.</p>
+ {% if rapid.last_error %}<p class="admin-api-message">{{ rapid.last_error }}</p>{% endif %}
+ {% if rapid_summary %}
+ <p class="hint">Letzter manueller Import:
+ {% if rapid_summary.requested is defined %}{{ rapid_summary.requested }} Anfragen,
+ {{ rapid_summary.fights }} Kämpfe und {{ rapid_summary.profiles }} Boxerprofile verarbeitet.
+ {% else %}{{ rapid_summary.error or "Keine Details verfügbar." }}{% endif %}
+ </p>
+ {% if rapid_summary.errors %}<p class="admin-api-message">{{ rapid_summary.errors|join(" · ") }}</p>{% endif %}
+ {% endif %}
+ <div class="admin-api-controls">
+  <form method="post" action="{{ url_for('admin.test_boxing_api') }}">
+    <input type="hidden" name="csrf_token" value="{{ token }}">
+    <button class="admin-outline" type="submit" {{ 'disabled' if rapid.remaining==0 else '' }}>VERBINDUNG TESTEN · 1 ANFRAGE</button>
+  </form>
+  <form method="post" action="{{ url_for('admin.sync_boxing_api') }}">
+    <input type="hidden" name="csrf_token" value="{{ token }}">
+    <button class="admin-primary" type="submit" {{ 'disabled' if rapid.remaining==0 else '' }}>BOXER & KÄMPFE SYNCHRONISIEREN →</button>
+  </form>
+ </div>
+ {% else %}
+ <div class="admin-api-message">Noch kein API-Schlüssel hinterlegt. Fightbase funktioniert bis dahin mit deinem vorhandenen lokalen Archiv weiter.</div>
+ <p>Erstelle im RapidAPI-Angebot <strong>Boxing Data API → Basic (Free, 0 $)</strong> einen API-Schlüssel und ergänze in deiner lokalen <code>boxing-app/.env</code>:</p>
+ <pre>BOXING_API_KEY=DEIN_ECHTER_RAPIDAPI_SCHLUESSEL
+BOXING_API_AUTO_SYNC=true</pre>
+ <p>Flask anschließend neu starten. **Den Schlüssel niemals in diesem Chat oder auf GitHub teilen.**</p>
+ {% endif %}
+ <p class="hint">Die öffentliche Preisseite nennt 100 Gratis-Anfragen/Monat; Fightbase begrenzt sich vorsichtshalber auf 30 Versuche, einschließlich Fehlern und Tests. Die Endpunkte für Termine und Ergebnisse können tarifabhängig gesperrt sein. Vorhandene Boxer, Fotos und Analysen bleiben erhalten.</p>
+</section>
 <section class="admin-panel admin-bulk-panel" id="zip-fotos">
  <div class="eyebrow">PHOTO MANAGEMENT · MASSENIMPORT</div>
  <h2>ALLE BOXERFOTOS AUF EINMAL</h2>
