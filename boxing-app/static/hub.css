@@ -327,3 +327,23 @@ gap:12px;border-bottom:1px solid #465571;padding:9px 0;font-size:14px}
   .admin-report-summary{grid-template-columns:repeat(2,minmax(0,1fr));}
   .admin-report-item img{width:60px;height:60px;}
 }
+
+
+/* Optional free Boxing Data API connection in the existing admin */
+.admin-api-panel{margin:18px 0 30px;}
+.admin-api-panel h2{font-size:clamp(33px,4vw,45px);margin:10px 0 14px;}
+.admin-api-panel>p{font-size:15px;line-height:1.7;max-width:950px;color:#c2d2e8;}
+.admin-api-panel pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0a1525;
+ border:1px solid #4d6280;border-radius:9px;padding:17px;font-size:14px;color:#e8f5ff;}
+.admin-api-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:18px 0;}
+.admin-api-stats>div{padding:15px 20px;background:#111f34;border:1px solid #415676;
+ border-radius:12px;color:#becfe6;}
+.admin-api-stats strong{display:block;font-size:28px;color:white;font-weight:900;}
+.admin-api-stats small{display:block;font-size:12px;line-height:1.6;}
+.admin-api-message{background:#2c2631;border:1px solid #816077;border-radius:9px;
+ color:#ffe7ce;padding:14px 17px;font-size:14px;}
+.admin-api-controls{display:flex;flex-wrap:wrap;gap:16px;margin:22px 0;}
+.admin-api-controls form{margin:0;}
+.admin-api-controls button{font-size:14px;min-height:49px;margin:0;}
+.admin-api-controls button:disabled{opacity:.5;cursor:not-allowed;}
+@media(max-width:650px){.admin-api-stats{grid-template-columns:1fr;}}
