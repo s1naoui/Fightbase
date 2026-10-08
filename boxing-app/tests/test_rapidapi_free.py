@@ -72,7 +72,7 @@ class RapidApiTests(unittest.TestCase):
     def test_provider_denied_route_not_called_again_and_cache_kept(self):
         denied=Response([],status=403)
         with patch("boxing_rapidapi.requests.get",return_value=denied) as req:
-            with self.assertRaisesRegex(rapid.ApiAccessError,"Gratis"):
+            with self.assertRaisesRegex(rapid.ApiAccessError,"kostenlosen Tarif"):
                 rapid.call("schedule",{"days":30})
             with self.assertRaisesRegex(rapid.ApiAccessError,"gesperrt"):
                 rapid.call("schedule",{"days":30})
