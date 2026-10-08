@@ -190,12 +190,25 @@ def save_events(records):
                   txt(item.get("venue")),txt(item.get("location")),utcnow()))
 
 def _is_boxing(item):
+    """Accept explicit boxing, reject MMA, kickboxing and ONE events."""
     sport = txt(item.get("strSport")).casefold()
     details = " ".join(txt(item.get(k)) for k in (
         "strLeague", "strEvent", "strDescriptionEN")).casefold()
-    return sport in ("fighting", "boxing") and any(
-        word in details for word in (
-            "boxing", "boxe", "boxen", "wbc", "wba", "ibf", "wbo", "professional boxer"))
+    if sport not in ("fighting", "boxing"):
+        return False
+    if any(word in details for word in (
+        "kickboxing", "muay thai", "mma", "mixed martial arts",
+        "one championship", "one the inner circle", "ufc", "bellator",
+        "pfl", "grappling", "karate")):
+        return False
+    return any(word in details for word in (
+        "boxing", "boxe", "boxen", "wbc", "wba", "ibf", "wbo",
+        "professional boxer"))
+
+def _has_two_boxers(a, b):
+    invalid = {"", "tba", "tbd", "unknown", "noch offen", "to be announced"}
+    left, right = txt(a).casefold(), txt(b).casefold()
+    return left not in invalid and right not in invalid and left != right
 
 def _split_match(item):
     left = txt(item.get("strHomeTeam"))
@@ -216,6 +229,7 @@ def _store_free_event(item):
         return
     title = txt(item.get("strEvent"))
     a, b = _split_match(item)
+    # Unknown participants: keep event, do not create a false fight.
     day = txt(item.get("dateEvent"))
     stamp = (day + "T" + txt(item.get("strTime"))) if day else ""
     status = "FINISHED" if day and day < date.today().isoformat() else "NOT_STARTED"
@@ -234,6 +248,8 @@ def _store_free_event(item):
                 identifier="tsdb-"+player.casefold().strip()
                 c.execute("""INSERT INTO hub_fighters(id,name,updated_at)
                     VALUES(?,?,?) ON CONFLICT(id) DO NOTHING""",(identifier,player,utcnow()))
+        if not _has_two_boxers(a, b):
+            return
         c.execute("""INSERT INTO hub_fights
             (id,fight_date,title,status,a_id,b_id,a_name,b_name,
              division,event_id,event_title,venue,location,updated_at)
@@ -324,15 +340,30 @@ def one(sql,params=()):
 def upcoming(limit=65):
     return rows("""SELECT * FROM hub_fights
        WHERE substr(fight_date,1,10)>=? AND status IN ('NOT_STARTED','LIVE')
+       AND trim(COALESCE(a_name,'')) != '' AND trim(COALESCE(b_name,'')) != ''
+       AND lower(trim(a_name)) NOT IN ('tba','tbd','unknown','noch offen')
+       AND lower(trim(b_name)) NOT IN ('tba','tbd','unknown','noch offen')
+       AND lower(trim(a_name)) != lower(trim(b_name))
        ORDER BY fight_date ASC LIMIT ?""",(date.today().isoformat(),limit))
 
 def results(limit=60):
     since=(date.today()-timedelta(days=365)).isoformat()
     return rows("""SELECT * FROM hub_fights WHERE status='FINISHED'
-       AND substr(fight_date,1,10)>=? ORDER BY fight_date DESC LIMIT ?""",(since,limit))
+       AND substr(fight_date,1,10)>=?
+       AND trim(COALESCE(a_name,'')) != '' AND trim(COALESCE(b_name,'')) != ''
+       AND lower(trim(a_name)) NOT IN ('tba','tbd','unknown','noch offen')
+       AND lower(trim(b_name)) NOT IN ('tba','tbd','unknown','noch offen')
+       ORDER BY fight_date DESC LIMIT ?""",(since,limit))
 
 def events():
-    return rows("""SELECT * FROM hub_events WHERE substr(event_date,1,10)>=?
+    return rows("""SELECT * FROM hub_events
+       WHERE substr(event_date,1,10)>=?
+       AND (lower(title) LIKE '%boxing%' OR lower(title) LIKE '%boxe%'
+            OR lower(title) LIKE '%wbc%' OR lower(title) LIKE '%wba%'
+            OR lower(title) LIKE '%ibf%' OR lower(title) LIKE '%wbo%')
+       AND lower(title) NOT LIKE '%kickboxing%'
+       AND lower(title) NOT LIKE '%one championship%'
+       AND lower(title) NOT LIKE '%one the inner circle%'
        ORDER BY event_date ASC LIMIT 50""",(date.today().isoformat(),))
 
 def fighters(search=""):

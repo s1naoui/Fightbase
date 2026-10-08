@@ -18,7 +18,7 @@
 <div class="date"><strong>{{ fight.fight_date|fightdate }}</strong><small>{{ fight.division or 'Gewicht offen' }}</small></div>
 <div class="matchup"><b class="red">{{ fight.a_name or 'Noch offen' }}</b><span>VS</span><b class="blue">{{ fight.b_name or 'Noch offen' }}</b></div>
 <div class="details"><b class="{{ 'live' if fight.status=='LIVE' else 'pill' }}">{{ {'LIVE':'LIVE','FINISHED':'ERGEBNIS','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</b><small>{{ (fight.outcome ~ (' · Runde ' ~ fight.result_round if fight.result_round else '')) if fight.outcome else (fight.venue or fight.location or '') }}</small></div><span class="arrow">→</span></a>
-{% endfor %}</div>{% else %}<div class="empty"><h3>Noch keine Kämpfe vorhanden</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'TheSportsDB liefert in diesem kostenlosen Feed zurzeit keine passenden Boxkämpfe.' }}</p></div>{% endif %}
+{% endfor %}</div>{% else %}<div class="empty"><h3>Keine bestätigten Boxerduelle verfügbar</h3><p>{{ 'Daten werden geladen. Diese Seite aktualisiert sich nach dem ersten Import.' if status.syncing else 'Im kostenlosen Feed sind derzeit keine Boxkämpfe mit zwei bekannten Teilnehmern vorhanden. Events ohne bestätigte Gegner werden nicht als Kämpfe angezeigt.' }}</p></div>{% endif %}
 {% elif tab=='fighters' %}
 <form class="search" action="{{ url_for('hub.dashboard') }}"><input type="hidden" name="tab" value="fighters"><input type="search" name="q" maxlength="80" placeholder="Boxer suchen, z. B. Usyk oder Fury" value="{{ search }}"><button type="submit">SUCHEN →</button></form>
 <p class="hint">Bei einer Suche mit mindestens drei Zeichen wird das Verzeichnis bei Bedarf durch API-Daten ergänzt.</p>
