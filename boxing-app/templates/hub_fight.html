@@ -1,0 +1,27 @@
+{% extends "hub_base.html" %}{% block title %}{{ fight.title or 'Kampfdetails' }} | Fightbase{% endblock %}
+{% block main %}
+<a class="back" href="{{ url_for('hub.dashboard') }}">← ZURÜCK ZUM KAMPFPLAN</a>
+<div class="eyebrow">{{ fight.fight_date|fightdate }} · {{ fight.division or 'Boxen' }} · {{ {'FINISHED':'BEENDET','LIVE':'LIVE','NOT_STARTED':'GEPLANT'}.get(fight.status,'OFFEN') }}</div>
+<h1 class="page-title">{{ fight.title or 'KAMPFDETAILS' }}</h1>
+<div class="duel">
+{% for side in ['a','b'] %}
+{% set name=fight.a_name if side=='a' else fight.b_name %}
+{% set fid=fight.a_id if side=='a' else fight.b_id %}
+{% set person=a if side=='a' else b %}
+<section class="duel-side {{ 'side-red' if side=='a' else 'side-blue' }}">
+<div class="duel-photo" data-fighter-photo="{{ fid }}" data-fighter-name="{{ name }}"><span>🥊</span><a data-source hidden target="_blank" rel="noopener noreferrer">Bildquelle ↗</a></div>
+<div class="duel-name"><small>{{ 'RED CORNER' if side=='a' else 'BLUE CORNER' }}</small><h2>{{ name or 'Noch offen' }}</h2><p>{{ (person.wins ~ '–' ~ person.losses ~ '–' ~ (person.draws or 0)) if person and person.wins is not none and person.losses is not none else 'Bilanz offen' }}</p>
+{% if fid %}<a href="{{ url_for('hub.fighter',fighter_id=fid) }}">BOXERPROFIL →</a>{% endif %}</div>
+</section>
+{% endfor %}
+<div class="duel-vs">VS</div></div>
+<div class="detail-grid">
+<section class="info-panel"><div class="eyebrow">FIGHT CARD</div><h2>Kampfinformationen</h2>
+<dl><dt>Datum</dt><dd>{{ fight.fight_date|fightdate }}</dd><dt>Event</dt><dd>{{ fight.event_title or '–' }}</dd><dt>Veranstaltungsort</dt><dd>{{ fight.venue or '–' }}</dd><dt>Ort</dt><dd>{{ fight.location or '–' }}</dd><dt>Gewichtsklasse</dt><dd>{{ fight.division or '–' }}</dd><dt>Runden</dt><dd>{{ fight.rounds if fight.rounds is not none else '–' }}</dd><dt>Ergebnis</dt><dd>{{ fight.outcome or 'Noch kein Ergebnis' }}{% if fight.result_round %} · Runde {{ fight.result_round }}{% endif %}</dd></dl></section>
+<section class="info-panel"><div class="eyebrow">FIGHTBASE PROGNOSE</div><h2>Wer gewinnt?</h2>
+{% if probability %}<div class="probabilities"><div><small>{{ a.name }}</small><strong class="red">{{ probability.probability_a }}%</strong></div><span>VS</span><div><small>{{ b.name }}</small><strong class="blue">{{ probability.probability_b }}%</strong></div></div>
+<p>Grobe Schätzung aus Alter und Bilanz – keine Wettquote und keine verlässliche Vorhersage.</p>
+<form method="post" action="{{ url_for('hub.analyse',fight_id=fight.id) }}"><button class="cta" type="submit">ANALYSE SPEICHERN →</button></form>
+{% else %}<p>Für eine Prognose fehlen aktuell Alter oder Kampfbilanz. Diese Angaben werden nach Möglichkeit beim Öffnen des Kampfs von der API ergänzt.</p>{% endif %}
+</section></div>
+{% endblock %}

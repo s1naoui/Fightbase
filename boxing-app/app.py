@@ -352,7 +352,7 @@ def get_selected_photo(gallery):
     return photos[0]
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/vergleich", methods=["GET", "POST"])
 def home():
     result = None
     values = {}
@@ -524,6 +524,12 @@ def clear_history():
 
 
 init_db()
+from portal import register_hub
+register_hub(app)
 
 if __name__ == "__main__":
+    import os
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        from boxing_feed import start_scheduler
+        start_scheduler()
     app.run(debug=True)
