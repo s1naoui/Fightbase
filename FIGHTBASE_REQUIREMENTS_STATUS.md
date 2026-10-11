@@ -32,3 +32,7 @@
 - Personenbilder: Wikidata und Wikimedia Commons; Urheber/Lizenz sind pro Datei zu prüfen.
 
 Die Seite ist weiterhin keine vollständig aktuelle FotMob-Alternative. Es gibt weder einen umfassenden kostenlosen Weltkampfdatenfeed noch vollständige Statistiken und aktuelle freigabefähige Boxerfotos für sämtliche Boxer.
+
+## Änderung am 11. Oktober 2026
+
+Auf Wunsch des Projektteams wurde die vollständige **Boxerfoto-Funktion entfernt**. Boxer-Verzeichnis, Profil, Kampfdetails, Prognosevergleich und Adminoberfläche zeigen keine Boxerbilder mehr. Die Foto-API, Bildsuche und Upload-/ZIP-Funktionen wurden ebenfalls deaktiviert bzw. aus dem Code entfernt. Die übrigen funktionalen Requirements bleiben bestehen.
