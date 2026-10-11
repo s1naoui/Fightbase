@@ -193,22 +193,7 @@
             {% for side in ['a', 'b'] %}
             {% set fighter_name = result.name_a if side == 'a' else result.name_b %}
             {% set probability = result.probability_a if side == 'a' else result.probability_b %}
-            {% set gallery = galleries[side] %}
-            {% set selected = gallery.selected %}
-            {% set photo = gallery.photos[selected] if gallery.photos else none %}
-
-            <div class="arena-fighter {{ 'arena-red' if side == 'a' else 'arena-blue' }}"
-                 id="arena-{{ side }}"
-                 data-name="{{ fighter_name }}"
-                 data-photos='{{ gallery.photos | tojson | forceescape }}'
-                 data-index="{{ selected }}">
-
-                <div class="arena-photo"
-                     {% if photo %}
-                     style="background-image: url('{{ photo.url }}')"
-                     {% endif %}>
-                </div>
-
+            <div class="arena-fighter {{ 'arena-red' if side == 'a' else 'arena-blue' }}">
                 <div class="arena-colorwash"></div>
                 <div class="arena-grain"></div>
 
@@ -227,30 +212,10 @@
                     <small>SIEGWAHRSCHEINLICHKEIT</small>
                 </div>
 
-                <div class="photo-controls">
-                    <span class="photo-status" role="status">Verifiziertes Foto wird geprüft …</span>
-                    <a class="photo-credit" {% if photo %}href="{{ photo.source }}"{% else %}hidden{% endif %}
-                      target="_blank" rel="noopener noreferrer">Fotoquelle und Lizenz ↗</a>
-                </div>
             </div>
             {% endfor %}
 
             <div class="arena-vs">VS</div>
-        </div>
-
-        <div class="refresh-grid">
-            {% for side in ['a', 'b'] %}
-            <form method="POST"
-                  action="{{ url_for('refresh_photos') }}">
-                <input type="hidden" name="name"
-                       value="{{ result.name_a if side == 'a' else result.name_b }}">
-                <input type="hidden" name="analysis_id"
-                       value="{{ analysis_id }}">
-                <button type="submit" class="refresh-photos">
-                    ↻ Neue Bildvorschläge für Boxer {{ side | upper }}
-                </button>
-            </form>
-            {% endfor %}
         </div>
 
         {% set pa = result.probability_a | float %}
@@ -384,37 +349,6 @@
     <div class="footer-logo">FIGHT<span>BASE</span></div>
     <p>BOXING ANALYTICS · FIGHT INTELLIGENCE</p>
 </footer>
-
-<script>
-document.querySelectorAll(".arena-fighter").forEach(card => {
-  const name=card.dataset.name;
-  const layer=card.querySelector(".arena-photo");
-  const credit=card.querySelector(".photo-credit");
-  const status=card.querySelector(".photo-status");
-  const original=JSON.parse(card.dataset.photos||"[]");
-  let current=original.length ? original[0] : null;
-  function show(photo){
-    if(!photo||!photo.url){status.textContent="Kein eindeutig zugeordnetes Foto verfügbar";return;}
-    layer.style.backgroundImage='url("'+photo.url.replaceAll('"',"%22")+'")';
-    if(photo.source){credit.href=photo.source;credit.hidden=false;}
-    status.textContent="Foto über Wikidata eindeutig zugeordnet";
-  }
-  if(current)show(current);
-  async function load(tries=0){
-    try{
-      const url=new URL({{ url_for('verified_comparison_photo')|tojson }},window.location.origin);
-      url.searchParams.set("name",name);
-      const response=await fetch(url);
-      if(!response.ok)throw Error();
-      const photo=await response.json();
-      if(photo.url){show(photo);return;}
-      if(photo.pending&&tries<5){setTimeout(()=>load(tries+1),2000);return;}
-      show(null);
-    }catch(_){status.textContent="Foto aktuell nicht verfügbar";}
-  }
-  load();
-});
-</script>
 
 </body>
 </html>
