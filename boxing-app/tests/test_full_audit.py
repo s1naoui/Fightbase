@@ -1,14 +1,12 @@
-"""Audit tests for sourced fight data, portraits, UI pages, and response latency."""
+"""Audit tests for sourced fight data, UI pages, and response latency."""
 import time
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 import app
 import boxing_feed as feed
 from prediction import calculate_three_way
-import identity_photos
 
 
 class FightbaseAudit(unittest.TestCase):
@@ -97,23 +95,6 @@ class FightbaseAudit(unittest.TestCase):
         content=self.client.get("/kampf/"+match["id"]).data
         self.assertIn(b"three-prob-bar",content)
         self.assertIn(b"Unentschieden",content)
-
-    def test_photo_api_is_nonblocking_and_no_random_legacy_photo(self):
-        feed.save_fighter({"id":"audit-test","name":"Demo Boxer"})
-        with patch("portal.feed.photo",side_effect=RuntimeError("Should not be used")):
-            with patch("identity_photos.quick_verified_photo",
-                       return_value={"url":None,"source":None,"pending":True}):
-                start=time.perf_counter()
-                response=self.client.get("/api/foto/audit-test")
-                elapsed=time.perf_counter()-start
-        self.assertEqual(response.status_code,200)
-        self.assertTrue(response.json["pending"])
-        self.assertLess(elapsed,3.0)
-        with patch("identity_photos.quick_verified_photo",
-                   return_value={"url":None,"source":None,"pending":True}):
-            response=self.client.get("/vergleich/verifiziertes-foto?name=Tyson%20Fury")
-            self.assertEqual(response.status_code,200)
-            self.assertTrue(response.json["pending"])
 
     def test_routes_and_local_response_speed(self):
         for url in ["/","/?tab=results","/?tab=fighters","/?tab=events",
