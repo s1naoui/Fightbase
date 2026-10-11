@@ -30,7 +30,7 @@
 <form class="search" action="{{ url_for('hub.dashboard') }}"><input type="hidden" name="tab" value="fighters"><input type="search" name="q" maxlength="80" placeholder="Boxer suchen, z. B. Usyk oder Fury" value="{{ search }}"><button type="submit">SUCHEN →</button></form>
 <p class="hint">Boxerprofile aus dem historischen Archiv, überprüften Einträgen und optionaler Boxing Data API. Vollständige Bilanzen und Geburtsdaten sind nicht für alle Boxer verfügbar.</p>
 {% if fighters %}<div class="fighter-grid">{% for fighter in fighters %}
-<a class="fighter-card" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}"><div class="fighter-photo" data-fighter-photo="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}"><span class="missing-photo">Kein verifiziertes Foto</span></div>
+<a class="fighter-card" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}">
 <div class="fighter-info"><small>{{ fighter.division or 'BOXING' }}</small><h3>{{ fighter.name }}</h3><p>{{ (fighter.wins ~ '–' ~ fighter.losses ~ '–' ~ (fighter.draws or 0)) if fighter.wins is not none and fighter.losses is not none else 'Bilanz noch nicht verfügbar' }}</p><b>PROFIL ANSEHEN →</b></div></a>
 {% endfor %}</div>{% else %}<div class="empty">Keine Boxer gefunden. Bitte eine andere Schreibweise versuchen. Das kostenlose Archiv ist unvollständig.</div>{% endif %}
 {% elif tab=='organizations' %}

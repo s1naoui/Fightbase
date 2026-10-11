@@ -1,5 +1,4 @@
-"""Admin authentication, safe image uploads, sourced records and fixture creation."""
-import io
+"""Admin authentication, sourced records and fixture creation."""
 import os
 import tempfile
 import unittest
@@ -7,7 +6,6 @@ from datetime import date, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
-from PIL import Image
 import app
 import boxing_feed as feed
 import fightbase_admin as admin
@@ -18,10 +16,8 @@ class AdminTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory()
         self.old_db=app.DB_PATH
         self.old_feed=feed.DB
-        self.old_uploads=admin.UPLOADS
         db=Path(self.tmp.name)/"test.db"
         app.DB_PATH=feed.DB=db
-        admin.UPLOADS=Path(self.tmp.name)/"fighter_images"
         self.env=patch.dict(os.environ,{
             "FIGHTBASE_ADMIN_PASSWORD":"SuperSafeTestPassword!27",
             "FIGHTBASE_SECRET_KEY":"a"*48
@@ -37,7 +33,6 @@ class AdminTests(unittest.TestCase):
         self.env.stop()
         app.DB_PATH=self.old_db
         feed.DB=self.old_feed
-        admin.UPLOADS=self.old_uploads
         self.tmp.cleanup()
 
     def csrf(self):
@@ -53,51 +48,12 @@ class AdminTests(unittest.TestCase):
 
     def test_admin_requires_login_and_csrf(self):
         self.assertEqual(self.client.get("/admin").status_code,302)
-        self.assertEqual(self.client.post("/admin/boxer/"+self.fid+"/foto").status_code,403)
+        self.assertEqual(self.client.post("/admin/boxer/"+self.fid+"/bilanz").status_code,403)
         self.login()
         self.assertEqual(self.client.get("/admin").status_code,200)
-        response=self.client.post("/admin/boxer/"+self.fid+"/foto",
+        response=self.client.post("/admin/boxer/"+self.fid+"/bilanz",
                                   data={"csrf_token":"wrong"})
         self.assertEqual(response.status_code,400)
-
-    def test_upload_writes_webp_and_photo_api_prefers_it(self):
-        self.login()
-        original=io.BytesIO()
-        Image.new("RGB",(900,1200),(55,80,120)).save(original,format="PNG")
-        original.seek(0)
-        result=self.client.post("/admin/boxer/"+self.fid+"/foto",
-            data={"csrf_token":self.csrf(),"q":"Fury",
-                  "photo":(original,"verified-photo.png"),
-                  "source_url":"https://example.org/licensed-photo"},
-            content_type="multipart/form-data")
-        self.assertEqual(result.status_code,302)
-        image=self.client.get("/api/foto/"+self.fid)
-        self.assertEqual(image.status_code,200)
-        self.assertTrue(image.json["manual"])
-        self.assertIn("/media/boxer/",image.json["url"])
-        picture=self.client.get(image.json["url"])
-        self.assertEqual(picture.status_code,200)
-        self.assertEqual(picture.mimetype,"image/webp")
-        with Image.open(io.BytesIO(picture.data)) as rendered:
-            self.assertEqual(rendered.format,"WEBP")
-            self.assertLessEqual(max(rendered.size),1600)
-        delete=self.client.post("/admin/boxer/"+self.fid+"/foto/loeschen",
-                    data={"csrf_token":self.csrf(),"q":"Fury"})
-        self.assertEqual(delete.status_code,302)
-        self.assertEqual(self.client.get(image.json["url"]).status_code,404)
-
-    def test_bad_content_and_oversize_are_rejected(self):
-        self.login()
-        wrong=self.client.post("/admin/boxer/"+self.fid+"/foto",
-          data={"csrf_token":self.csrf(),"photo":(io.BytesIO(b"not-an-image"),"fake.png")},
-          content_type="multipart/form-data")
-        self.assertEqual(wrong.status_code,302)
-        self.assertIsNone(feed.one("SELECT * FROM hub_admin_photos WHERE fighter_id=?",(self.fid,)))
-        big=self.client.post("/admin/boxer/"+self.fid+"/foto",
-          data={"csrf_token":self.csrf(),"photo":(io.BytesIO(b"x"*(5*1024*1024+1)),"big.png")},
-          content_type="multipart/form-data")
-        self.assertIn(big.status_code,(302,413))
-        self.assertIsNone(feed.one("SELECT * FROM hub_admin_photos WHERE fighter_id=?",(self.fid,)))
 
     def test_sourced_records_survive_seed_restart(self):
         self.login()

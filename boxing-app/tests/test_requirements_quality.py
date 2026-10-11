@@ -1,11 +1,9 @@
 import unittest
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
 
 import app
 import boxing_feed as feed
-from identity_photos import choose_photo
 from prediction import calculate_three_way
 
 
@@ -55,21 +53,6 @@ class DataQualityTests(unittest.TestCase):
         self.assertIn(b"Unentschieden",self.client.get(
             "/kampf/"+next(b["id"] for b in feed.upcoming()
                             if b["a_name"]=="Daniel Dubois")).data)
-
-    def test_photo_rejects_mismatched_or_ambiguous_entity(self):
-        sample={"P106":[{"mainsnak":{"datavalue":{"value":{"id":"Q11338576"}}}}],
-                "P18":[{"mainsnak":{"datavalue":{"value":"Test.jpg"}}}]}
-        search=[{"id":"Q123","label":"Daniel Dubois",
-                 "description":"British professional boxer"}]
-        good=choose_photo("Daniel Dubois",search,{"Q123":{"claims":sample}})
-        self.assertIn("Test.jpg",good["url"])
-        self.assertIsNone(choose_photo("Anthony Joshua",search,
-                                      {"Q123":{"claims":sample}}))
-        self.assertIsNone(choose_photo("Daniel Dubois",search,
-                                      {"Q123":{"claims":{"P18":sample["P18"]}}}))
-        self.assertIsNone(choose_photo("Daniel Dubois",search+search,
-                                      {"Q123":{"claims":sample}}))
-
 
 if __name__ == "__main__":
     unittest.main()

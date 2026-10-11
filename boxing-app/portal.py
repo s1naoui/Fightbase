@@ -108,20 +108,6 @@ def fighter(fighter_id):
        fighter=person,matches=matches,reference=reference,
        manual_record=manual_record)
 
-@bp.route("/api/foto/<fighter_id>")
-def photo(fighter_id):
-    if len(fighter_id)>100:
-        abort(404)
-    person=feed.one("SELECT * FROM hub_fighters WHERE id=?",(fighter_id,))
-    if not person:
-        abort(404)
-    from identity_photos import quick_verified_photo
-    from fightbase_admin import get_photo
-    uploaded=get_photo(fighter_id)
-    if uploaded:
-        return jsonify(uploaded)
-    return jsonify(quick_verified_photo(fighter_id,person["name"]))
-
 @bp.route("/api/status")
 def status():
     feed.trigger_sync()

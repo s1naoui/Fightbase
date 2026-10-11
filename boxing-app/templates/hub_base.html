@@ -14,26 +14,6 @@
 </main>
 <footer><strong>FIGHT<span>BASE</span></strong><p>Quellen: Open Boxing (historisch, MIT) + TheSportsDB (kostenlos) + optionale Boxing Data API · Stand: {{ status.last_success[:16] if status.last_success else 'Noch nicht synchronisiert' }} UTC · Prognosen sind keine Wettquoten.</p></footer>
 <script>
-document.querySelectorAll("[data-fighter-photo]").forEach(function(box){
- const id=box.dataset.fighterPhoto; if(!id)return;
- const load=async function(){try{
-  const res=await fetch("{{ url_for('hub.dashboard') }}api/foto/"+encodeURIComponent(id));
-  if(!res.ok)return;
-  const data=await res.json();
-  if(data.pending){
-    const old=Number(box.dataset.retries||0);
-    if(old<5){box.dataset.retries=String(old+1);setTimeout(load,2000);}
-    return;
-  }
-  if(!data.url)return;
-  const imageUrl=new URL(data.url,location.origin);
-  if(imageUrl.protocol!=="https:"&&imageUrl.origin!==location.origin)return;
-  const img=document.createElement("img");img.alt=box.dataset.fighterName||"Boxer";img.loading="lazy";img.src=imageUrl.href;
-  img.onerror=function(){img.remove()};img.onload=function(){const placeholder=box.querySelector(".missing-photo");if(placeholder)placeholder.hidden=true;};box.prepend(img);
-  const source=box.querySelector("[data-source]");if(source&&data.source){source.href=data.source;source.hidden=false;}
- }catch(_){}};
- if("IntersectionObserver" in window){const obs=new IntersectionObserver(function(entries){if(entries[0].isIntersecting){obs.disconnect();load();}},{rootMargin:"250px"});obs.observe(box)}else{load()}
-});
 {% if page=='dashboard' %}
 const initial={{ (status.last_success or '')|tojson }};
 let cycles=0;const timer=setInterval(async function(){if(++cycles>20){clearInterval(timer);return;}

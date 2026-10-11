@@ -56,9 +56,6 @@ def init_feed():
         c.execute("""CREATE TABLE IF NOT EXISTS hub_events(
             id TEXT PRIMARY KEY, title TEXT, event_date TEXT,
             venue TEXT, location TEXT, updated_at TEXT)""")
-        c.execute("""CREATE TABLE IF NOT EXISTS hub_images(
-            fighter_id TEXT PRIMARY KEY, image_url TEXT,
-            source_url TEXT, checked_at TEXT)""")
         c.execute("""CREATE TABLE IF NOT EXISTS hub_rankings(
             page INTEGER PRIMARY KEY, content TEXT NOT NULL, checked_at TEXT)""")
         c.execute("CREATE INDEX IF NOT EXISTS hub_date ON hub_fights(fight_date)")
@@ -470,12 +467,6 @@ def event_fights(event_id):
 def rankings(page=1):
     # No reliable, current, free WBA/WBC/IBF/WBO ranking source.
     return []
-
-
-def photo(fid,name):
-    """One strictly identity-verified photo or a neutral placeholder."""
-    from identity_photos import verified_photo
-    return verified_photo(fid,name)
 
 
 # Direct sources are official organisation pages, not unverified current belts.
