@@ -1,0 +1,20 @@
+# Fightbase FH project - free public demo on Render.
+# This service runs from the boxing-app/ subfolder.
+services:
+  - type: web
+    name: fightbase-fh-demo
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    rootDir: boxing-app
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 app:app
+    healthCheckPath: /
+    envVars:
+      - key: FIGHTBASE_SECRET_KEY
+        generateValue: true
+      # Keep the optional paid-provider integration disabled for the public demo.
+      # The free TheSportsDB feed and bundled boxing archive still work.
+      - key: BOXING_API_AUTO_SYNC
+        value: "false"
