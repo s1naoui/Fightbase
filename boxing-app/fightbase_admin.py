@@ -4,8 +4,10 @@ import hmac
 import json
 import threading
 import os
+import re
 import secrets
 import time
+import uuid
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -290,7 +292,7 @@ def remove_fight(fight_id):
     return redirect(url_for("admin.dashboard")+"#fight-editor")
 
 
-# Testing and manual import use the user's existing admin CSRF session.
+# Manual API imports use the authenticated administrator's CSRF session.
 # Manual synchronization runs in the background rather than blocking the page.
 _RAPID_JOB_LOCK=threading.Lock()
 
