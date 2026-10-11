@@ -347,3 +347,10 @@ gap:12px;border-bottom:1px solid #465571;padding:9px 0;font-size:14px}
 .admin-api-controls button{font-size:14px;min-height:49px;margin:0;}
 .admin-api-controls button:disabled{opacity:.5;cursor:not-allowed;}
 @media(max-width:650px){.admin-api-stats{grid-template-columns:1fr;}}
+
+/* Text-only boxer presentation: photos are deliberately disabled. */
+.fighter-card{display:block;min-height:140px}
+.fighter-info{width:100%;padding:24px}
+.profile-hero{grid-template-columns:minmax(0,1fr)}
+.duel-side{background:linear-gradient(130deg,#361823,#141d31)}
+.duel-side.side-blue{background:linear-gradient(130deg,#0e315b,#151c30)}
