@@ -1,32 +1,21 @@
-"""Fightbase local admin: image uploads and sourced fighter-record overrides.
-
-Never commit passwords or uploaded images to Git. This admin is intended for
-local development. Configure a password and stable Flask secret in .env.
-"""
+"""Fightbase admin for sourced boxer records, fight management and API sync."""
 from __future__ import annotations
 import hmac
-import io
 import json
 import threading
 import os
-import re
 import secrets
 import time
-import uuid
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 from flask import (Blueprint, abort, flash, jsonify, redirect, render_template,
-                   request, send_file, session, url_for)
+                   request, session, url_for)
 from dotenv import load_dotenv
-from PIL import Image, ImageOps, UnidentifiedImageError
 import boxing_feed as feed
 
 bp=Blueprint("admin",__name__)
 BASE=Path(__file__).resolve().parent
-UPLOADS=BASE/"uploads"/"fighter_photos"
-MAX_PHOTO_BYTES=5*1024*1024
-Image.MAX_IMAGE_PIXELS=16_000_000
 LOGIN_ERRORS={}
 
 def configured():
@@ -64,18 +53,10 @@ def init_admin(app):
 
 def ensure_tables():
     with feed.connect() as db:
-        db.execute("""CREATE TABLE IF NOT EXISTS hub_admin_photos(
-            fighter_id TEXT PRIMARY KEY,
-            filename TEXT NOT NULL,
-            source_url TEXT,
-            updated_at TEXT NOT NULL)""")
         db.execute("""CREATE TABLE IF NOT EXISTS hub_admin_records(
             fighter_id TEXT PRIMARY KEY,
             wins INTEGER, losses INTEGER, draws INTEGER, ko_wins INTEGER,
             source_url TEXT NOT NULL, updated_at TEXT NOT NULL)""")
-        db.execute("""CREATE TABLE IF NOT EXISTS hub_photo_imports(
-            id TEXT PRIMARY KEY, created_at TEXT NOT NULL,
-            report_json TEXT NOT NULL)""")
 def apply_manual_records():
     """Reapply user's sourced corrections after seeded stat refresh."""
     with feed.connect() as db:
@@ -90,19 +71,6 @@ def apply_manual_records():
         except Exception as exc:
             if "no such table" not in str(exc):
                 raise
-
-def get_photo(fighter_id):
-    row=feed.one("SELECT * FROM hub_admin_photos WHERE fighter_id=?",(fighter_id,))
-    if not row:
-        return None
-    filename=row["filename"]
-    if not re.fullmatch(r"[0-9a-f]{32}\.webp", filename):
-        return None
-    if not (UPLOADS/filename).is_file():
-        return None
-    return {"url":url_for("admin.photo",fighter_id=fighter_id,v=row["updated_at"]),
-            "source":row["source_url"],"pending":False,
-            "manual":True}
 
 def get_manual_record(fighter_id):
     return feed.one("SELECT * FROM hub_admin_records WHERE fighter_id=?",(fighter_id,))
@@ -159,28 +127,14 @@ def dashboard():
         fighters=feed.fighters(q)
     else:
         fighters=feed.fighters()[:30]
-    photo_rows={r["fighter_id"]:r for r in feed.rows("SELECT * FROM hub_admin_photos")}
     record_rows={r["fighter_id"]:r for r in feed.rows("SELECT * FROM hub_admin_records")}
     mine=feed.rows("""SELECT * FROM hub_fights WHERE id LIKE 'manual-%'
         ORDER BY fight_date DESC LIMIT 30""")
     from boxing_rapidapi import usage
     return render_template("admin_dashboard.html",status=feed.status(),page="admin",
-        fighters=fighters,q=q,photos=photo_rows,records=record_rows,token=csrf(),
+        fighters=fighters,q=q,records=record_rows,token=csrf(),
         manual_fights=mine,rapid=usage(),
         rapid_summary=json.loads(feed.meta("rapid_last_run_summary","{}") or "{}"))
-
-@bp.get("/media/boxer/<fighter_id>")
-def photo(fighter_id):
-    _fighter_or_404(fighter_id)
-    row=feed.one("SELECT filename FROM hub_admin_photos WHERE fighter_id=?",(fighter_id,))
-    if not row or not re.fullmatch(r"[0-9a-f]{32}\.webp",row["filename"]):
-        abort(404)
-    path=UPLOADS/row["filename"]
-    if not path.is_file():
-        abort(404)
-    response=send_file(path,mimetype="image/webp",conditional=True,max_age=300)
-    response.headers["X-Content-Type-Options"]="nosniff"
-    return response
 
 def _require_admin_post():
     if not signed_in():
@@ -191,68 +145,6 @@ def _require_admin_post():
 def _back(fighter_id):
     return redirect(url_for("admin.dashboard",q=request.form.get("q","")[:80])+
                     "#fighter-"+fighter_id)
-
-@bp.post("/admin/boxer/<fighter_id>/foto")
-def upload_photo(fighter_id):
-    _require_admin_post()
-    person=_fighter_or_404(fighter_id)
-    upload=request.files.get("photo")
-    if not upload or not upload.filename:
-        flash("Bitte ein Bild auswählen.","error")
-        return _back(fighter_id)
-    data=upload.stream.read(MAX_PHOTO_BYTES+1)
-    if len(data)>MAX_PHOTO_BYTES:
-        flash("Das Bild ist zu groß (maximal 5 MB).","error")
-        return _back(fighter_id)
-    try:
-        with Image.open(io.BytesIO(data)) as original:
-            original.verify()
-        with Image.open(io.BytesIO(data)) as original:
-            if original.format not in ("JPEG","PNG","WEBP"):
-                raise ValueError("Nur JPG, PNG oder WebP sind erlaubt.")
-            if original.width*original.height>16_000_000:
-                raise ValueError("Bild hat zu viele Pixel (maximal 16 Megapixel).")
-            original=ImageOps.exif_transpose(original)
-            if original.width < 250 or original.height < 250:
-                raise ValueError("Das Foto muss mindestens 250 × 250 Pixel haben.")
-            original.thumbnail((1600,1600),Image.Resampling.LANCZOS)
-            converted=original.convert("RGB")
-            output=io.BytesIO()
-            converted.save(output,format="WEBP",quality=86,method=5)
-    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as e:
-        flash("Ungültiges oder beschädigtes Bild: "+str(e)[:120],"error")
-        return _back(fighter_id)
-    url=request.form.get("source_url","").strip()[:500]
-    if url and (urlsplit(url).scheme not in ("http","https")
-                or not urlsplit(url).netloc):
-        flash("Bildquelle muss eine gültige http(s)-Adresse sein.","error")
-        return _back(fighter_id)
-    UPLOADS.mkdir(parents=True,exist_ok=True)
-    filename=uuid.uuid4().hex+".webp"
-    (UPLOADS/filename).write_bytes(output.getvalue())
-    previous=feed.one("SELECT filename FROM hub_admin_photos WHERE fighter_id=?",(fighter_id,))
-    with feed.connect() as db:
-        db.execute("""INSERT INTO hub_admin_photos(fighter_id,filename,source_url,updated_at)
-          VALUES(?,?,?,?) ON CONFLICT(fighter_id) DO UPDATE SET
-          filename=excluded.filename,source_url=excluded.source_url,
-          updated_at=excluded.updated_at""",
-          (fighter_id,filename,url or None,feed.utcnow()))
-    if previous and re.fullmatch(r"[0-9a-f]{32}\.webp",previous["filename"]):
-        (UPLOADS/previous["filename"]).unlink(missing_ok=True)
-    flash("Foto für "+person["name"]+" erfolgreich übernommen.","success")
-    return _back(fighter_id)
-
-@bp.post("/admin/boxer/<fighter_id>/foto/loeschen")
-def delete_photo(fighter_id):
-    _require_admin_post()
-    _fighter_or_404(fighter_id)
-    old=feed.one("SELECT filename FROM hub_admin_photos WHERE fighter_id=?",(fighter_id,))
-    with feed.connect() as db:
-        db.execute("DELETE FROM hub_admin_photos WHERE fighter_id=?",(fighter_id,))
-    if old and re.fullmatch(r"[0-9a-f]{32}\.webp",old["filename"]):
-        (UPLOADS/old["filename"]).unlink(missing_ok=True)
-    flash("Eigenes Foto entfernt. Automatische Bildsuche ist wieder aktiv.","success")
-    return _back(fighter_id)
 
 @bp.post("/admin/boxer/<fighter_id>/bilanz")
 def save_record(fighter_id):
@@ -396,45 +288,6 @@ def remove_fight(fight_id):
         db.execute("DELETE FROM hub_events WHERE id=?",(row["event_id"],))
     flash("Manuell eingetragener Kampf entfernt.","success")
     return redirect(url_for("admin.dashboard")+"#fight-editor")
-
-
-# ZIP files never get extracted to user-supplied paths. Filename matching is
-# conservative and returns a reviewable report after import.
-@bp.post("/admin/fotos/zip-import")
-def zip_import():
-    _require_admin_post()
-    upload=request.files.get("archive")
-    if not upload or not upload.filename.lower().endswith(".zip"):
-        flash("Bitte eine ZIP-Datei mit JPG-, PNG- oder WebP-Bildern auswählen.","error")
-        return redirect(url_for("admin.dashboard")+"#zip-fotos")
-    from photo_bulk import ImportValidationError, import_archive
-    from zipfile import BadZipFile
-    try:
-        report=import_archive(upload.stream,
-                              overwrite=request.form.get("overwrite")=="1")
-    except (ImportValidationError, BadZipFile, OSError, EOFError) as exc:
-        flash("ZIP-Datei konnte nicht verarbeitet werden: "+str(exc)[:150],"error")
-        return redirect(url_for("admin.dashboard")+"#zip-fotos")
-    report_id=uuid.uuid4().hex
-    with feed.connect() as db:
-        db.execute("""INSERT INTO hub_photo_imports(id,created_at,report_json)
-          VALUES(?,?,?)""",(report_id,feed.utcnow(),
-                             json.dumps(report,ensure_ascii=False)))
-    return redirect(url_for("admin.zip_report",report_id=report_id))
-
-
-@bp.get("/admin/fotos/zip-bericht/<report_id>")
-def zip_report(report_id):
-    if not signed_in():
-        return redirect(url_for("admin.login"))
-    if not re.fullmatch(r"[0-9a-f]{32}",report_id):
-        abort(404)
-    row=feed.one("SELECT * FROM hub_photo_imports WHERE id=?",(report_id,))
-    if row is None:
-        abort(404)
-    report=json.loads(row["report_json"])
-    return render_template("admin_zip_report.html",status=feed.status(),
-       page="admin",report=report,created_at=row["created_at"],token=csrf())
 
 
 # Testing and manual import use the user's existing admin CSRF session.
