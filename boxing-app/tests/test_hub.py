@@ -64,19 +64,24 @@ class BoxingHubTests(unittest.TestCase):
         self.assertEqual(len(feed.rows("SELECT * FROM history")), 1)
         self.assertEqual(self.client.get(response.location).status_code, 200)
 
-    def test_unverified_legacy_image_is_not_displayed(self):
-        """An old cached image is not proof that it depicts this boxer."""
-        feed.save_fighter({"id":"photo-id","name":"Demo Boxer"})
-        with feed.connect() as db:
-            db.execute("INSERT INTO hub_images VALUES (?,?,?,?)", (
-                "photo-id","https://example.org/photo.jpg",
-                "https://example.org/source",feed.utcnow()))
-        from unittest.mock import patch
-        with patch("identity_photos.fetch",side_effect=ValueError("network unavailable")):
-            response=self.client.get("/api/foto/photo-id")
-        self.assertEqual(response.status_code,200)
-        self.assertIsNone(response.json["url"])
-
+    def test_no_fighter_photo_feature_remains(self):
+        """Every boxer view is text-only, including the manual comparison."""
+        routes = ["/?tab=fighters", "/boxer/reviewed-tyson-fury",
+                  "/vergleich"]
+        fight = feed.one("SELECT id FROM hub_fights LIMIT 1")
+        if fight:
+            routes.append("/kampf/" + fight["id"])
+        for path in routes:
+            with self.subTest(path=path):
+                html = self.client.get(path).get_data(as_text=True)
+                self.assertNotIn("<img", html.lower())
+                self.assertNotIn("data-fighter-photo", html)
+                self.assertNotIn("api/foto/", html)
+                self.assertNotIn("Kein verifiziertes Foto", html)
+        for path in ["/api/foto/reviewed-tyson-fury",
+                     "/vergleich/verifiziertes-foto?name=Fury",
+                     "/media/boxer/reviewed-tyson-fury"]:
+            self.assertEqual(self.client.get(path).status_code, 404)
 
 
 if __name__ == "__main__":
