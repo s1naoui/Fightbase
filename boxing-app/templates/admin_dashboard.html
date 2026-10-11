@@ -2,16 +2,12 @@
 {% block title %}Fightbase · Admin-Bereich{% endblock %}
 {% block main %}
 <section class="admin-intro-header">
- <div><div class="eyebrow">FIGHTBASE MANAGEMENT</div><h1 class="admin-title">BOXER <em>VERWALTEN.</em></h1><p>Ein eigenes, hochwertiges Foto pro Boxerprofil hochladen und belegte Bilanzen pflegen.</p></div>
+ <div><div class="eyebrow">FIGHTBASE MANAGEMENT</div><h1 class="admin-title">BOXER <em>VERWALTEN.</em></h1><p>Verifizierte Boxerbilanzen pflegen, Kämpfe verwalten und Datenquellen aktualisieren.</p></div>
  <form method="post" action="{{ url_for('admin.logout') }}"><input type="hidden" name="csrf_token" value="{{ token }}"><button type="submit" class="admin-outline">Abmelden</button></form>
 </section>
 {% for category,message in get_flashed_messages(with_categories=true) %}
  <div class="admin-alert {{ 'admin-error' if category=='error' else 'admin-success' }}" role="status">{{ message }}</div>
 {% endfor %}
-<div class="admin-help">
- <strong><icon name="shield-check" inline/> Deine Daten bleiben auf deinem PC.</strong>
- <p>Hochgeladene Fotos werden lokal unter <code>boxing-app/uploads/fighter_photos</code> gespeichert und sind absichtlich nicht Teil von GitHub. Bitte lade nur Fotos hoch, die du rechtmäßig verwenden darfst. Das Bild ersetzt für das ausgewählte Boxerprofil die automatische Bildsuche.</p>
-</div>
 <section class="admin-panel admin-api-panel" id="boxing-api">
  <div class="eyebrow">KOSTENLOSE BOXING DATA API · OPTIONAL</div>
  <h2>Boxdaten automatisch importieren</h2>
@@ -49,31 +45,7 @@
 BOXING_API_AUTO_SYNC=true</pre>
  <p>Flask anschließend neu starten. **Den Schlüssel niemals in diesem Chat oder auf GitHub teilen.**</p>
  {% endif %}
- <p class="hint">Die öffentliche Preisseite nennt 100 Gratis-Anfragen/Monat; Fightbase begrenzt sich vorsichtshalber auf 30 Versuche, einschließlich Fehlern und Tests. Die Endpunkte für Termine und Ergebnisse können tarifabhängig gesperrt sein. Vorhandene Boxer, Fotos und Analysen bleiben erhalten.</p>
-</section>
-<section class="admin-panel admin-bulk-panel" id="zip-fotos">
- <div class="eyebrow">PHOTO MANAGEMENT · MASSENIMPORT</div>
- <h2>ALLE BOXERFOTOS AUF EINMAL</h2>
- <p>Lege alle Boxerfotos in einen Ordner und erstelle daraus eine <strong>ZIP-Datei</strong>. Fightbase erkennt die Boxer anhand des Dateinamens und fügt eindeutige Treffer automatisch ein.</p>
- <div class="admin-zip-names">
-  <span>Tyson Fury.jpg</span>
-  <span>Oleksandr Usyk.png</span>
-  <span>Anthony Joshua.webp</span>
- </div>
- <p class="hint">Bei mehreren Profilen mit gleichem Namen benutze <strong>Name__profil-id.jpg</strong>, zum Beispiel <code>Tyson Fury__reviewed-tyson-fury.jpg</code>. Die Profil-ID steht auf jeder Boxerkarte im Admin-Bereich. Unklare Treffer werden nicht übernommen.</p>
- <form class="admin-form" method="post" action="{{ url_for('admin.zip_import') }}" enctype="multipart/form-data">
-   <input type="hidden" name="csrf_token" value="{{ token }}">
-   <label>ZIP-Datei mit deinen Fotos auswählen
-      <input type="file" name="archive" accept=".zip,application/zip" required>
-   </label>
-   <label class="admin-zip-checkbox">
-     <input type="checkbox" name="overwrite" value="1">
-     Bereits selbst hochgeladene Bilder ersetzen
-   </label>
-   <button type="submit" class="admin-primary">ZIP IMPORTIEREN UND AUTOMATISCH ZUORDNEN →</button>
- </form>
- <p class="hint">Bis 250 Dateien pro ZIP, maximal 64 MB ZIP-Größe, maximal 5 MB und 16 Megapixel pro Bild. Akzeptiert: JPG, PNG und WebP. Nach dem Hochladen bekommst du einen Bericht, welche Fotos erfolgreich zugeordnet wurden und welche nicht.</p>
- <p class="hint"><strong>Wichtig:</strong> Fightbase prüft den Dateinamen, nicht automatisch das Gesicht auf dem Foto. Verwende die richtigen Bilder und nur solche mit entsprechenden Nutzungsrechten.</p>
+ <p class="hint">Die öffentliche Preisseite nennt 100 Gratis-Anfragen/Monat; Fightbase begrenzt sich vorsichtshalber auf 30 Versuche, einschließlich Fehlern und Tests. Die Endpunkte für Termine und Ergebnisse können tarifabhängig gesperrt sein. Vorhandene Boxer und Analysen bleiben erhalten.</p>
 </section>
 <section class="admin-panel admin-fight-editor" id="fight-editor">
  <div class="eyebrow">FIGHT CALENDAR</div><h2>Neuen Kampf eintragen</h2>
@@ -115,35 +87,12 @@ BOXING_API_AUTO_SYNC=true</pre>
 {% if fighters %}
 <div class="admin-fighter-grid">
  {% for fighter in fighters %}
- {% set existing=photos.get(fighter.id) %}
- {% set manual=records.get(fighter.id) %}
+  {% set manual=records.get(fighter.id) %}
  <section class="admin-fighter" id="fighter-{{ fighter.id }}">
   <div class="admin-fighter-head">
     <div><div class="eyebrow">{{ fighter.division or "BOXING" }}</div><h2>{{ fighter.name }}</h2><small>Profil-ID: {{ fighter.id }}</small></div>
     <a class="admin-profile-link" href="{{ url_for('hub.fighter',fighter_id=fighter.id) }}" target="_blank" rel="noopener noreferrer">Profil ↗</a>
   </div>
-  <div class="admin-preview" data-admin-preview-id="{{ fighter.id }}" data-fighter-name="{{ fighter.name }}">
-    {% if existing %}
-      <img src="{{ url_for('admin.photo',fighter_id=fighter.id,v=existing.updated_at) }}" loading="lazy" alt="Eigenes Foto von {{ fighter.name }}">
-    {% else %}
-      <span class="missing-photo">Noch kein eigenes Foto – automatische Bildsuche</span>
-    {% endif %}
-  </div>
-  <div class="admin-label-row"><strong>Foto verwalten</strong><span>{{ "EIGENES FOTO AKTIV" if existing else "AUTOMATISCHES FOTO" }}</span></div>
-  <form method="post" action="{{ url_for('admin.upload_photo',fighter_id=fighter.id) }}" enctype="multipart/form-data" class="admin-form">
-    <input type="hidden" name="csrf_token" value="{{ token }}"><input type="hidden" name="q" value="{{ q }}">
-    <label>Bild auswählen <small>(JPG, PNG oder WebP, max. 5 MB)</small>
-      <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
-    </label>
-    <label>Bildquelle / Fotograf (optional)<input type="url" name="source_url" placeholder="https://..."></label>
-    <button class="admin-primary" type="submit">FOTO HOCHLADEN / ERSETZEN</button>
-  </form>
-  {% if existing %}
-  <form method="post" action="{{ url_for('admin.delete_photo',fighter_id=fighter.id) }}" onsubmit="return confirm('Eigenes Foto wirklich entfernen?')">
-    <input type="hidden" name="csrf_token" value="{{ token }}"><input type="hidden" name="q" value="{{ q }}">
-    <button class="admin-danger" type="submit">Eigenes Foto entfernen</button>
-  </form>
-  {% endif %}
   <details class="admin-records">
     <summary>Bilanz {{ "bearbeiten" if manual or fighter.wins is not none else "ergänzen" }} <span>{{ (fighter.wins ~ '–' ~ fighter.losses ~ '–' ~ (fighter.draws or 0)) if fighter.wins is not none and fighter.losses is not none else "Nicht verfügbar" }}</span></summary>
     <p class="hint">Nur echte Zahlen eintragen. Eine öffentliche Quellen-URL ist Pflicht. Manuelle Angaben haben nach dem Neustart Vorrang vor importierten Daten.</p>
@@ -171,21 +120,4 @@ BOXING_API_AUTO_SYNC=true</pre>
 {% else %}
  <div class="empty"><h2>Kein Boxer gefunden</h2><p>Versuche eine andere Schreibweise. Das Archiv enthält nicht alle Profiboxer.</p></div>
 {% endif %}
-{% endblock %}
-{% block scripts %}
-<script>
-// Existing manual photo previews are already attached; no duplicate network image.
-document.querySelectorAll(".admin-preview[data-admin-preview-id]").forEach(box=>{
- if(box.querySelector("img"))return;
- const id=box.dataset.adminPreviewId;
- fetch({{ url_for('hub.dashboard')|tojson }}+"api/foto/"+encodeURIComponent(id))
- .then(r=>r.json()).then(data=>{
-  if(!data.url)return;
-  const img=document.createElement("img");img.loading="lazy";
-  img.alt=box.dataset.fighterName;img.src=data.url;
-  img.onload=()=>{const placeholder=box.querySelector(".missing-photo");if(placeholder)placeholder.hidden=true;};
-  box.prepend(img);
- }).catch(()=>{});
-});
-</script>
 {% endblock %}
