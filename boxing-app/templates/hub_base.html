@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{% block title %}Fightbase · Boxing Hub{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static',filename='hub.css') }}"></head>
+<link rel="stylesheet" href="{{ url_for('static',filename='hub.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('fightbase-theme')==='light'?'light':'dark'}catch(_){document.documentElement.dataset.theme='dark'}</script></head>
 <body>
 <header class="topbar"><div class="top-inner"><a class="brand" href="{{ url_for('hub.dashboard') }}">🥊 FIGHT<span>BASE</span><small>BOXING INTELLIGENCE</small></a>
 <nav><a href="{{ url_for('hub.dashboard',tab='upcoming') }}" {% if tab is defined and tab=='upcoming' %}aria-current="page"{% endif %}>Kämpfe</a><a href="{{ url_for('hub.dashboard',tab='results') }}" {% if tab is defined and tab=='results' %}aria-current="page"{% endif %}>Ergebnisse</a><a href="{{ url_for('hub.dashboard',tab='fighters') }}" {% if tab is defined and tab=='fighters' %}aria-current="page"{% endif %}>Boxer</a><a href="{{ url_for('hub.dashboard',tab='rankings') }}" {% if tab is defined and tab=='rankings' %}aria-current="page"{% endif %}>Ranglisten</a><a href="{{ url_for('hub.dashboard',tab='organizations') }}" {% if tab is defined and tab=='organizations' %}aria-current="page"{% endif %}>Organisationen</a><a href="{{ url_for('hub.dashboard',tab='events') }}" {% if tab is defined and tab=='events' %}aria-current="page"{% endif %}>Events</a></nav>
-<a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a><a class="compare-link admin-nav-link" href="{{ url_for('admin.dashboard') }}">⚙ Admin</a></div></header>
+<a class="compare-link" href="{{ url_for('home') }}">⚡ Vergleichen</a><button type="button" class="theme-toggle" data-theme-toggle aria-label="Hellmodus aktivieren" aria-pressed="false">☀ Hellmodus</button><a class="compare-link admin-nav-link" href="{{ url_for('admin.dashboard') }}">⚙ Admin</a></div></header>
 <main class="container">
 {% if not status.configured %}
 <div class="notice">Kostenloser Datenfeed nicht erreichbar. Das historische Archiv ist weiterhin verfügbar.</div>
@@ -23,4 +25,5 @@ let cycles=0;const timer=setInterval(async function(){if(++cycles>20){clearInter
 },15000);
 {% endif %}
 </script>{% block scripts %}{% endblock %}
+<script src="{{ url_for('static', filename='theme.js') }}" defer></script>
 </body></html>

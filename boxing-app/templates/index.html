@@ -7,6 +7,8 @@
     <title>Fightbase | Boxing Analytics</title>
     <link rel="stylesheet"
           href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <script>try{document.documentElement.dataset.theme=localStorage.getItem('fightbase-theme')==='light'?'light':'dark'}catch(_){document.documentElement.dataset.theme='dark'}</script>
 </head>
 <body>
 
@@ -29,6 +31,7 @@
             <a href="#analyse">Analysen</a>
             <a href="#verlauf">Analyseverlauf</a>
         </nav>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Hellmodus aktivieren" aria-pressed="false">☀ Hellmodus</button>
         <span class="nav-status">
             <span class="status-dot"></span>
             FIGHT INTELLIGENCE
@@ -350,5 +353,6 @@
     <p>BOXING ANALYTICS · FIGHT INTELLIGENCE</p>
 </footer>
 
+<script src="{{ url_for('static', filename='theme.js') }}" defer></script>
 </body>
 </html>

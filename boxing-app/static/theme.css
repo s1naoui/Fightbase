@@ -1,0 +1,43 @@
+/* Fightbase: opt-in light appearance. Original dark styling remains the default. */
+:root{color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light;--bg:#f4f7fb;--panel:#fff;--border:#ced8e6;--muted:#52657e;--white:#182338}
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;border:1px solid #667b99;border-radius:8px;background:#20334e;color:#fff;font:700 12px Inter,Arial,sans-serif;padding:10px 13px;min-height:40px;cursor:pointer;transition:background .15s,color .15s}
+.theme-toggle:hover,.theme-toggle:focus-visible{background:#344d70;outline-offset:3px}
+:root[data-theme="light"] .theme-toggle{background:#e9f0fa;border-color:#aabbd0;color:#182338}
+:root[data-theme="light"] .theme-toggle:hover{background:#dbe7f5}
+:root[data-theme="light"] body{background:#f4f7fb!important;color:#182338!important;background-image:radial-gradient(ellipse at 15% 0%,#ffe5e9,transparent 42%),radial-gradient(ellipse at 85% 0%,#deecff,transparent 42%)!important}
+:root[data-theme="light"] .topbar,:root[data-theme="light"] .navbar{background:#fff!important;border-bottom-color:#d5deeb!important}
+:root[data-theme="light"] .topbar nav a,:root[data-theme="light"] .navigation a,:root[data-theme="light"] .brand small,:root[data-theme="light"] .logo-text small,:root[data-theme="light"] .nav-status{color:#344866}
+:root[data-theme="light"] .topbar nav a:hover,:root[data-theme="light"] .navigation a:hover{color:#b21f39}
+:root[data-theme="light"] .compare-link,:root[data-theme="light"] .reset-button,:root[data-theme="light"] .view-button{background:#e8eff9!important;border-color:#adc2db!important;color:#173154!important}
+:root[data-theme="light"] .hero,:root[data-theme="light"] .content-panel,:root[data-theme="light"] .prediction-section,:root[data-theme="light"] .history-section{background:linear-gradient(140deg,#fff,#edf3fb)!important;border-color:#d3ddec!important;box-shadow:0 12px 30px #18335512!important;color:#182338}
+:root[data-theme="light"] .hero h1,:root[data-theme="light"] .hero p,:root[data-theme="light"] .hero .hero-eyebrow{color:#24344e}
+:root[data-theme="light"] .arena-background{background:linear-gradient(#e7edf7,#f4f7fb)!important}
+:root[data-theme="light"] .light-red,:root[data-theme="light"] .light-blue{opacity:.15}
+:root[data-theme="light"] .metrics>div,:root[data-theme="light"] .fighter-card,:root[data-theme="light"] .event-card,:root[data-theme="light"] .rank-card,:root[data-theme="light"] .info-panel,:root[data-theme="light"] .profile-hero,:root[data-theme="light"] .stats div,:root[data-theme="light"] .history-card,:root[data-theme="light"] .admin-panel,:root[data-theme="light"] .admin-fighter,:root[data-theme="light"] .admin-preview,:root[data-theme="light"] .admin-report-summary>div,:root[data-theme="light"] .admin-report-item,:root[data-theme="light"] .admin-api-stats>div,:root[data-theme="light"] .admin-zip-names span{background:#fff!important;border-color:#d2ddec!important;color:#263750!important;box-shadow:0 3px 12px #21385209}
+:root[data-theme="light"] .red-corner{background:linear-gradient(145deg,#fff0f2,#fff)!important;border-color:#e2a9b2!important}
+:root[data-theme="light"] .blue-corner{background:linear-gradient(145deg,#edf5ff,#fff)!important;border-color:#abc7eb!important}
+:root[data-theme="light"] .duel-side{background:linear-gradient(135deg,#fff0f1,#f1f5fc)!important}
+:root[data-theme="light"] .duel-side.side-blue{background:linear-gradient(135deg,#e9f3ff,#f1f5fc)!important}
+:root[data-theme="light"] .section-badge,:root[data-theme="light"] .tabs a,:root[data-theme="light"] .admin-outline{background:#eaf0f8!important;border-color:#bbcadf!important;color:#263b5b!important}
+:root[data-theme="light"] .tabs a.active,:root[data-theme="light"] .tabs a:hover{background:#b9283b!important;color:#fff!important;border-color:#b9283b!important}
+:root[data-theme="light"] .field input,:root[data-theme="light"] .search input,:root[data-theme="light"] .search select,:root[data-theme="light"] .admin-form input,:root[data-theme="light"] .admin-login input,:root[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#fff!important;color:#1e2d44!important;border-color:#b9c9de!important}
+:root[data-theme="light"] input::placeholder{color:#64758c}
+:root[data-theme="light"] .notice,:root[data-theme="light"] .admin-help{background:#fff7e8!important;color:#704916!important}
+:root[data-theme="light"] .fight-row{border-bottom-color:#d4dfed!important}
+:root[data-theme="light"] .fight-row:hover{background:#e9f0f9!important}
+:root[data-theme="light"] .free-note,:root[data-theme="light"] .section-label,:root[data-theme="light"] .field label,:root[data-theme="light"] .metrics>div,:root[data-theme="light"] .date small,:root[data-theme="light"] .details small,:root[data-theme="light"] .history-boxer small,:root[data-theme="light"] .hero p,:root[data-theme="light"] .history-heading p,:root[data-theme="light"] .prediction-heading p{color:#52657e!important}
+:root[data-theme="light"] .metrics strong,:root[data-theme="light"] .rating-row b,:root[data-theme="light"] .admin-report-summary strong,:root[data-theme="light"] .admin-api-stats strong{color:#17263f!important}
+:root[data-theme="light"] .footer,:root[data-theme="light"] footer{background:#eaf0f8!important;color:#2a405e!important;border-top-color:#cfdbeb!important}
+:root[data-theme="light"] footer p,:root[data-theme="light"] .footer p{color:#536882!important}
+:root[data-theme="light"] .empty-history{border-color:#b6c5d9}
+:root[data-theme="light"] .empty-history p{color:#52657e}
+:root[data-theme="light"] .history-versus{color:#516781}
+:root[data-theme="light"] .section-top h2,:root[data-theme="light"] .history-heading h2,:root[data-theme="light"] .prediction-heading h2{color:#192c47}
+:root[data-theme="light"] .admin-panel pre,:root[data-theme="light"] .admin-api-panel pre{background:#f0f4fa!important;color:#243850!important;border-color:#c0cfe2!important}
+:root[data-theme="light"] .admin-report-item p,:root[data-theme="light"] .admin-api-panel>p{color:#445d78!important}
+:root[data-theme="light"] .arena-fighter{background:#152037;color:#fff}
+:root[data-theme="light"] .arena-fighter .arena-content,:root[data-theme="light"] .arena-fighter .arena-corner{color:#fff}
+:root[data-theme="light"] .red-text{color:#b5233a}
+:root[data-theme="light"] .blue-text{color:#1667bd}
+@media(max-width:700px){.theme-toggle{padding:8px 10px;min-height:36px;font-size:11px}.top-inner,.nav-container{flex-wrap:wrap;gap:10px}}
